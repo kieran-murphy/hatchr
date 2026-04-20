@@ -2,6 +2,7 @@ import { db } from '$lib/server/db';
 import { creatures } from '$lib/server/db/schema';
 import { fail } from '@sveltejs/kit';
 import type { Actions } from './$types';
+import { getRandomRarity, getRandomType } from '$lib/server/game';
 
 export const actions: Actions = {
     default: async ({ locals }) => {
@@ -10,10 +11,13 @@ export const actions: Actions = {
             return fail(401, { message: 'You must be logged in to hatch an egg!' });
         }
 
+        const rarity = getRandomRarity(); 
+        const speciesName = getRandomType(rarity);
+
         const sampleCreature = {
             userId: user.id,
-            speciesName: "Mystery Blob",
-            rarity: "COMMON" as const,
+            speciesName: speciesName,
+            rarity: rarity,
             imageUrl: "https://via.placeholder.com/150", // Placeholder for now
         };
 

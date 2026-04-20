@@ -3,8 +3,8 @@
 
     const rarityColors = {
         COMMON: 'text-gray-400 bg-gray-400/10 border-gray-400/20',
-        RARE: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
-        EPIC: 'text-purple-400 bg-purple-400/10 border-purple-400/20',
+        UNCOMMON: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
+        RARE: 'text-purple-400 bg-purple-400/10 border-purple-400/20',
         LEGENDARY: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20 shadow-[0_0_15px_rgba(250,204,21,0.2)]'
     };
 </script>

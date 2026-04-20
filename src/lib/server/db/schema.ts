@@ -1,7 +1,7 @@
 import { pgTable, text, integer, timestamp, pgEnum, uuid, boolean, index } from 'drizzle-orm/pg-core';
 import { relations } from "drizzle-orm";
 
-export const rarityEnum = pgEnum('rarity', ['COMMON', 'RARE', 'EPIC', 'LEGENDARY']);
+export const rarityEnum = pgEnum('rarity', ['COMMON', 'UNCOMMON', 'RARE', 'LEGENDARY']);
 
 export const user = pgTable("user", {
   id: text("id").primaryKey(),
