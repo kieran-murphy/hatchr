@@ -22,7 +22,7 @@
 
                 <a href="/collection" class="text-sm font-medium text-gray-400 hover:text-white transition">Collection</a>
 
-                <a href="/" class="text-sm font-medium text-gray-400 hover:text-white transition">{user.name}</a>
+                <a href="/profile" class="text-sm font-medium text-gray-400 hover:text-white transition">{user.name}</a>
 
                 <form method="post" action="/demo/better-auth?/signOut" use:enhance>
                     <button class="text-sm font-medium text-gray-400 hover:text-red-400 transition">
