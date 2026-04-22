@@ -19,6 +19,9 @@
             <a href="/" class="text-sm font-medium text-gray-400 hover:text-white transition">Home</a>
             
             {#if user}
+
+                <a href="/shop" class="text-sm font-medium text-gray-400 hover:text-white transition">Shop</a>
+
                 <a href="/hatch" class="text-sm font-medium text-gray-400 hover:text-white transition">Hatch</a>
 
                 <a href="/collection" class="text-sm font-medium text-gray-400 hover:text-white transition">Collection</a>
