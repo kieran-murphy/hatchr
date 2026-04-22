@@ -1,32 +1,56 @@
 import { db } from '$lib/server/db';
-import { creatures } from '$lib/server/db/schema';
-import { fail } from '@sveltejs/kit';
-import type { Actions } from './$types';
+import { user as userTable, creatures } from '$lib/server/db/schema';
 import { getRandomRarity, getRandomType } from '$lib/server/game';
+import { eq, sql } from 'drizzle-orm';
+import { fail, redirect } from '@sveltejs/kit';
 
-export const actions: Actions = {
+export const load = async ({ locals }) => {
+    if (!locals.user) throw redirect(302, '/login');
+
+    const [userData] = await db
+        .select({ gems: userTable.gems })
+        .from(userTable)
+        .where(eq(userTable.id, locals.user.id));
+
+    return {
+        userGems: userData?.gems ?? 0
+    };
+};
+
+export const actions = {
     default: async ({ locals }) => {
         const user = locals.user;
-        if (!user) {
-            return fail(401, { message: 'You must be logged in to hatch an egg!' });
+        if (!user) throw redirect(302, '/login');
+
+        const HATCH_COST = 10;
+
+        if (user.gems < HATCH_COST) {
+            return fail(400, { message: "You're broke! Check your profile for gems." });
         }
 
-        const rarity = getRandomRarity(); 
-        const speciesName = getRandomType(rarity);
-
-        const sampleCreature = {
-            userId: user.id,
-            speciesName: speciesName,
-            rarity: rarity,
-            imageUrl: "https://via.placeholder.com/150", // Placeholder for now
-        };
-
         try {
-            await db.insert(creatures).values(sampleCreature);
-            return { success: true };
+            const result = await db.transaction(async (tx) => {
+                await tx.update(userTable)
+                    .set({ gems: sql`${userTable.gems} - ${HATCH_COST}` })
+                    .where(eq(userTable.id, user.id));
+
+                const rarity = getRandomRarity();
+                const speciesName = getRandomType(rarity);
+
+                const [newCreature] = await tx.insert(creatures).values({
+                    userId: user.id,
+                    speciesName,
+                    rarity,
+                    imageUrl: `https://image.pollinations.ai/prompt/cute-pixel-art-${speciesName.replace(' ', '-')}-sprite`
+                }).returning();
+
+                return newCreature;
+            });
+
+            return { success: true, creature: result };
         } catch (error) {
             console.error(error);
-            return fail(500, { message: 'Failed to hatch creature.' });
+            return fail(500, { message: "The egg refused to crack. Try again!" });
         }
     }
 };

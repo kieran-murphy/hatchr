@@ -6,6 +6,7 @@
     let { children } = $props();
 
     let user = $derived($page.data.user);
+    
 </script>
 
 <nav class="sticky top-0 z-50 border-b border-white/10 bg-black/80 backdrop-blur-md px-6 py-4">
