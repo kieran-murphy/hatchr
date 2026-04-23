@@ -45,7 +45,7 @@
 
                 <div class="text-center">
                     <h2 class="text-3xl font-black text-white uppercase italic">{form.creature.speciesName}</h2>
-                    <a href="/collection" class="text-xs text-blue-500/50 hover:text-blue-500 transition-colors uppercase font-bold tracking-widest">Added to Collection</a>
+                    <a href="/" class="text-xs text-blue-500/50 hover:text-blue-500 transition-colors uppercase font-bold tracking-widest">Added to Collection</a>
                 </div>
             </div>
         {:else if hatching}

@@ -35,7 +35,7 @@
         </div>
 
         <footer class="mt-8 pt-6">
-            <a href="/collection" class="block w-full py-3 bg-white text-black text-center font-bold rounded-xl hover:bg-gray-200 transition">
+            <a href="/" class="block w-full py-3 bg-white text-black text-center font-bold rounded-xl hover:bg-gray-200 transition">
                 Go to Collection
             </a>
         </footer>
