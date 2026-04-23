@@ -27,7 +27,7 @@
 
                 <form method="POST" action="?/buyGems" use:enhance>
                     <input type="hidden" name="amount" value={bundle.amount} />
-                    <button class="w-full px-8 py-3 bg-white text-black font-bold rounded-xl hover:bg-blue-500 hover:text-white transition-colors">
+                    <button class="w-full px-8 py-3 bg-white text-black font-bold rounded-xl hover:bg-blue-500 hover:text-white transition-colors cursor-pointer">
                         CLAIM {bundle.price}
                     </button>
                 </form>

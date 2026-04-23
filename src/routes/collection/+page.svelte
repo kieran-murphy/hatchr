@@ -1,5 +1,6 @@
 <script lang="ts">
     let { data } = $props();
+    import creatureImg from '$lib/assets/silhouette.png';
 
     const rarityColors = {
         COMMON: 'text-gray-400 bg-gray-400/10 border-gray-400/20',
@@ -23,7 +24,7 @@
     {#if data.creatures.length === 0}
         <div class="text-center py-32 border-2 border-dashed border-white/5 rounded-3xl bg-white/[0.02]">
             <p class="text-gray-500 mb-6">Your collection is empty. Time to hatch some eggs!</p>
-            <a href="/hatch" class="text-blue-500 font-bold hover:underline underline-offset-4">Go to the Nursery →</a>
+            <a href="/hatch" class="text-blue-500 font-bold hover:underline underline-offset-4">Go →</a>
         </div>
     {:else}
         <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
@@ -31,7 +32,7 @@
                 <div class="group relative bg-[#0A0A0A] border border-white/10 rounded-2xl p-4 transition-all hover:-translate-y-1 hover:border-white/20">
                     <div class="aspect-square rounded-xl bg-black mb-4 overflow-hidden border border-white/5 flex items-center justify-center">
                         <img 
-                            src={creature.imageUrl} 
+                            src={creatureImg} 
                             alt={creature.speciesName}
                             class="w-full h-full object-cover transition-transform group-hover:scale-110"
                         />
