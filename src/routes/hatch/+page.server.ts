@@ -3,6 +3,9 @@ import { user as userTable, creatures } from '$lib/server/db/schema';
 import { getRandomRarity, getRandomType } from '$lib/server/game';
 import { eq, sql } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
+import fs from 'node:fs';
+import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 
 export const load = async ({ locals }) => {
     if (!locals.user) throw redirect(302, '/login');
@@ -36,12 +39,33 @@ export const actions = {
 
                 const rarity = getRandomRarity();
                 const speciesName = getRandomType(rarity);
+                
+                const aiUrl = `https://image.pollinations.ai/prompt/cute-pixel-art-${speciesName.replace(/\s+/g, '-')}-sprite`;
+
+                const response = await fetch(aiUrl);
+                if (!response.ok) throw new Error('Failed to fetch AI image');
+                
+                const arrayBuffer = await response.arrayBuffer();
+                const buffer = Buffer.from(arrayBuffer);
+
+                const fileName = `${randomUUID()}.png`;
+                const uploadDir = path.join(process.cwd(), 'static', 'uploads', 'creatures');
+                
+                if (!fs.existsSync(uploadDir)) {
+                    fs.mkdirSync(uploadDir, { recursive: true });
+                }
+
+                const filePath = path.join(uploadDir, fileName);
+                
+                fs.writeFileSync(filePath, buffer);
+
+                const dbImagePath = `/uploads/creatures/${fileName}`;
 
                 const [newCreature] = await tx.insert(creatures).values({
                     userId: user.id,
                     speciesName,
                     rarity,
-                    imageUrl: `https://image.pollinations.ai/prompt/cute-pixel-art-${speciesName.replace(' ', '-')}-sprite`
+                    imageUrl: dbImagePath
                 }).returning();
 
                 return newCreature;
@@ -49,7 +73,7 @@ export const actions = {
 
             return { success: true, creature: result };
         } catch (error) {
-            console.error(error);
+            console.error('Hatching Error:', error);
             return fail(500, { message: "The egg refused to crack. Try again!" });
         }
     }

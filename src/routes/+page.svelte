@@ -1,6 +1,5 @@
 <script lang="ts">
 	let { data } = $props();
-	import creatureImg from '$lib/assets/silhouette.png';
 
 	const rarityColors = {
 		COMMON: 'text-gray-400 bg-gray-400/10 border-gray-400/20',
@@ -42,7 +41,7 @@
 						class="mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-white/5 bg-black"
 					>
 						<img
-							src={creatureImg}
+							src={creature.imageUrl}
 							alt={creature.speciesName}
 							class="h-full w-full object-cover transition-transform group-hover:scale-110"
 						/>

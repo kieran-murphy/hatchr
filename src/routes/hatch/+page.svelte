@@ -1,7 +1,6 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
     import { scale, fade } from 'svelte/transition';
-    import creatureImg from '$lib/assets/silhouette.png';
     
     let { data, form } = $props();
     
@@ -32,7 +31,7 @@
             <div in:scale={{ duration: 400, start: 0.8 }} out:fade={{ duration: 200 }} class="flex flex-col items-center gap-4">
                 <div class="relative group">
                     <img 
-                        src={creatureImg} 
+                        src={form.creature.imageUrl} 
                         alt="New Creature" 
                         class="w-48 h-48 rounded-3xl bg-black/40 border-2 border-white/10 p-4"
                     />
