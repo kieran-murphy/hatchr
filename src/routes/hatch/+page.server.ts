@@ -40,7 +40,7 @@ export const actions = {
                 const rarity = getRandomRarity();
                 const speciesName = getRandomType(rarity);
                 
-                const aiUrl = `https://image.pollinations.ai/prompt/cute-pixel-art-${speciesName.replace(/\s+/g, '-')}-sprite`;
+                const aiUrl = `https://image.pollinations.ai/prompt/super-cute-creature-pixel-art-${speciesName.replace(/\s+/g, '-')}-sprite`;
 
                 const response = await fetch(aiUrl);
                 if (!response.ok) throw new Error('Failed to fetch AI image');

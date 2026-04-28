@@ -59,20 +59,21 @@ export const actions: Actions = {
 		return redirect(302, '/demo/better-auth');
 	},
 	signInSocial: async (event) => {
-		const formData = await event.request.formData();
-		const provider = formData.get('provider')?.toString() ?? 'github';
-		const callbackURL = formData.get('callbackURL')?.toString() ?? '/demo/better-auth';
+        const formData = await event.request.formData();
+        const provider = formData.get('provider')?.toString() ?? 'github';
+        const callbackURL = formData.get('callbackURL')?.toString() ?? '/demo/better-auth';
 
-		const result = await auth.api.signInSocial({
-			body: {
-				provider: provider as 'github',
-				callbackURL
-			}
-		});
+        const result = await auth.api.signInSocial({
+            body: {
+                provider: provider, 
+                callbackURL
+            }
+        });
 
-		if (result.url) {
-			return redirect(302, result.url);
-		}
-		return fail(400, { message: 'Social sign-in failed' });
-	}
+        if (result.url) {
+            // 3. This redirects the user to Google/GitHub's actual login page
+            return redirect(302, result.url);
+        }
+        return fail(400, { message: 'Social sign-in failed' });
+    }
 };
