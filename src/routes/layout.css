@@ -1,3 +1,13 @@
 @import 'tailwindcss';
 @plugin '@tailwindcss/forms';
 @plugin '@tailwindcss/typography';
+
+@keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.spinner-glow {
+    animation: spin-slow 2s linear infinite;
+    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5));
+}

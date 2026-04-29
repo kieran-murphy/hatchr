@@ -1,18 +1,18 @@
 export type Rarity = 'COMMON' | 'UNCOMMON' | 'RARE' | 'LEGENDARY';
 
 const CREATURE_POOL: Record<Rarity, string[]> = {
-    COMMON: ['Water', 'Grass', 'Fire'],
-    UNCOMMON: ['Electric', 'Ground', 'Flying'],
-    RARE: ['Fighting', 'Dark', 'Psychic'],
+    COMMON: ['Water', 'Grass', 'Fire', 'Normal', 'Bug', 'Rock', 'Steel', 'Poison'],
+    UNCOMMON: ['Electric', 'Ground', 'Ice', 'Flying'],
+    RARE: ['Fighting', 'Dark', 'Psychic', 'Ghost'],
     LEGENDARY: ['Fairy', 'Dragon']
 };
 
 export function getRandomRarity(): Rarity {
     const roll = Math.random() * 100; 
 
-    if (roll < 1) return 'LEGENDARY';   // 1% chance
-    if (roll < 6) return 'RARE';        // 5% chance
-    if (roll < 21) return 'UNCOMMON';   // 15% chance
+    if (roll < 3) return 'LEGENDARY';   // 1% chance
+    if (roll < 10) return 'RARE';        // 5% chance
+    if (roll < 25) return 'UNCOMMON';   // 15% chance
     return 'COMMON';                    // 79% chance
 }
 
