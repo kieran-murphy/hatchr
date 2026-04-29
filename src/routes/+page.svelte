@@ -1,44 +1,96 @@
 <script lang="ts">
     import { scale } from 'svelte/transition';
+    import { ListFilter, Shuffle } from 'lucide-svelte/icons';
+
     let { data } = $props();
 
     const rarityColors = {
         COMMON: 'text-gray-400 bg-gray-400/10 border-gray-400/20',
-        RARE: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
-        EPIC: 'text-purple-400 bg-purple-400/10 border-purple-400/20',
-        LEGENDARY:
-            'text-yellow-400 bg-yellow-400/10 border-yellow-400/20 shadow-[0_0_15px_rgba(250,204,21,0.2)]'
+        UNCOMMON: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
+        RARE: 'text-purple-400 bg-purple-400/10 border-purple-400/20',
+        LEGENDARY: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20 shadow-[0_0_15px_rgba(250,204,21,0.2)]'
     };
+
+    let sortBy = $state('recent');
+
+    const rarityWeight = {
+        'LEGENDARY': 4,
+        'RARE': 3,
+        'UNCOMMON': 2,
+        'COMMON': 1
+    };
+
+    let sortedCreatures = $derived.by(() => {
+        let list = [...data.creatures];
+
+        if (sortBy === 'rarity') {
+            return list.sort((a, b) => rarityWeight[b.rarity] - rarityWeight[a.rarity]);
+        }
+        
+        if (sortBy === 'alphabetical') {
+            return list.sort((a, b) => a.speciesName.localeCompare(b.speciesName));
+        }
+
+        if (sortBy === 'type') {
+            return list.sort((a, b) => (a.speciesName || '').localeCompare(b.speciesName || ''));
+        }
+
+        return list; 
+    });
+
 </script>
 
 <div class="mx-auto max-w-7xl p-6 md:p-12">
-    <header class="mb-12 flex items-end justify-between">
+    <header class="mb-12">
+    <div class="flex items-end justify-between mb-8">
         <div>
             <h1 class="text-5xl font-black tracking-tighter text-white uppercase italic">Your Collection</h1>
             <p class="font-bold text-blue-500 uppercase text-[10px] tracking-widest mt-1">
-                Total Creatures: {data.creatures.length}
+                {data.creatures.length} Creatures
             </p>
         </div>
-        <a
-            href="/hatch"
-            class="rounded-xl bg-blue-600 px-6 py-3 font-black text-white transition hover:bg-blue-500 active:scale-95 shadow-lg shadow-blue-600/20 uppercase text-xs tracking-widest"
-        >
+        <a href="/hatch" class="rounded-xl bg-blue-600 px-6 py-3 font-black text-white transition hover:bg-blue-500 active:scale-95 shadow-lg shadow-blue-600/20 uppercase text-xs tracking-widest">
             Hatch More
         </a>
-    </header>
+    </div>
 
-    {#if data.creatures.length === 0}
+    <div class="flex items-center gap-2 p-1 bg-white/5 border border-white/5 rounded-2xl w-fit">
+        <div class="px-3 text-slate-500">
+            <ListFilter size={16} />
+        </div>
+        
+        {#each ['recent', 'rarity', 'alphabetical', 'type'] as option (option)}
+            <button 
+                onclick={() => sortBy = option}
+                class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
+                {sortBy === option ? 'bg-white text-black' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
+            >
+                {option}
+            </button>
+        {/each}
+
+        <button 
+            onclick={() => sortedCreatures = [...data.creatures].sort(() => Math.random() - 0.5)}
+            class="p-2 text-slate-500 hover:text-blue-400 transition-colors"
+            title="Shuffle Collection"
+        >
+            <Shuffle size={16} />
+        </button>
+    </div>
+</header>
+
+    {#if sortedCreatures.length === 0}
         <div
             class="rounded-[2.5rem] border border-white/5 bg-[#0A0A0A]/60 backdrop-blur-xl py-32 text-center"
         >
-            <p class="mb-6 text-gray-500 font-medium">Your collection is empty. The nursery is waiting.</p>
+            <p class="mb-6 text-gray-500 font-medium">Your collection is empty.</p>
             <a href="/hatch" class="font-black text-blue-500 uppercase tracking-widest hover:text-blue-400 transition-colors">
                 Go Hatch →
             </a>
         </div>
     {:else}
         <div class="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {#each data.creatures as creature (creature.id)}
+            {#each sortedCreatures as creature (creature.id)}
                 <a
                     href="/creature/{creature.id}"
                     in:scale={{ duration: 300, start: 0.95 }}
