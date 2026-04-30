@@ -1,5 +1,7 @@
 <script lang="ts">
-    import { scale } from 'svelte/transition';
+    import { flip } from 'svelte/animate';
+    import { quintOut } from 'svelte/easing';
+    import { scale, fade } from 'svelte/transition';
     import { ListFilter, Shuffle } from 'lucide-svelte/icons';
 
     let { data } = $props();
@@ -59,7 +61,7 @@
             <ListFilter size={16} />
         </div>
         
-        {#each ['recent', 'rarity', 'alphabetical', 'type'] as option (option)}
+        {#each ['recent', 'rarity', 'alphabetical'] as option (option)}
             <button 
                 onclick={() => sortBy = option}
                 class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
@@ -91,6 +93,11 @@
     {:else}
         <div class="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {#each sortedCreatures as creature (creature.id)}
+                <div 
+                    animate:flip={{ duration: 600, easing: quintOut }}
+                    in:scale={{ duration: 300, start: 0.9 }}
+                    class="group"
+                >
                 <a
                     href="/creature/{creature.id}"
                     in:scale={{ duration: 300, start: 0.95 }}
@@ -119,6 +126,7 @@
                         </h3>
                     </div>
                 </a>
+                </div>
             {/each}
         </div>
     {/if}
