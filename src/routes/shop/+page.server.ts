@@ -6,7 +6,7 @@ import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
     if (!locals.user) throw redirect(302, '/login');
-    return {}; // Layout handles the user data
+    return {};
 };
 
 export const actions: Actions = {
