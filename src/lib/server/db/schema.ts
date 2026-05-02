@@ -28,6 +28,7 @@ export const creatures = pgTable('creatures', {
   rarity: rarityEnum('rarity').default('COMMON').notNull(),
   imageUrl: text('image_url').notNull(),
   hatchedAt: timestamp('hatched_at').defaultNow().notNull(),
+  isFavorite: boolean('is_favorite').default(false),
 });
 
 export const session = pgTable(

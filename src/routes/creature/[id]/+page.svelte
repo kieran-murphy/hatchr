@@ -1,9 +1,9 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
-    import { Calendar, Shield, ChevronLeft, Loader2 } from 'lucide-svelte/icons';
+    import { Calendar, Shield, ChevronLeft, Loader2, Star } from 'lucide-svelte/icons';
     import { fly, fade } from 'svelte/transition';
     
-    let { data } = $props();
+    let { data, form } = $props();
     let creature = $derived(data.creature);
 
     const rarityColors = {
@@ -19,7 +19,6 @@
         EPIC: 'bg-purple-400/10',
         LEGENDARY: 'bg-yellow-400/10'
     };
-
 </script>
 
 {#if creature}
@@ -30,52 +29,73 @@
         </a>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-        <div in:fly={{ x: -20, duration: 600 }} class="relative group">
-            <div class="absolute inset-0 bg-blue-600/20 blur-[100px] rounded-full -z-10 group-hover:bg-blue-600/30 transition-colors"></div>
-            
-            <img 
-                src={creature.imageUrl} 
-                alt={creature.speciesName}
-                class="w-full aspect-square rounded-[3rem] bg-black/40 border border-white/10 p-8 shadow-2xl"
-            />
-        </div>
-
-        <div in:fly={{ x: 20, duration: 600, delay: 100 }} class="space-y-8">
-            <div>
-                <span class="text-[10px] font-black uppercase tracking-[0.4em] {rarityColors[creature.rarity]}">
-                    {creature.rarity} SPECIES
-                </span>
-                <h1 class="text-6xl font-black text-white italic tracking-tighter uppercase leading-none mt-2">
-                    {creature.speciesName}
-                </h1>
+            <!-- Visual Section -->
+            <div in:fly={{ x: -20, duration: 600 }} class="relative group">
+                <div class="absolute inset-0 bg-blue-600/20 blur-[100px] rounded-full -z-10 group-hover:bg-blue-600/30 transition-colors"></div>
+                
+                <img 
+                    src={creature.imageUrl} 
+                    alt={creature.speciesName}
+                    class="w-full aspect-square rounded-[3rem] bg-black/40 border border-white/10 p-8 shadow-2xl"
+                />
             </div>
 
-            <div class="grid grid-cols-1 gap-4">
-                <div class="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center gap-4">
-                    <div class="p-3 bg-blue-500/10 rounded-xl text-blue-400">
-                        <Calendar size={20} />
-                    </div>
+            <!-- Data Section -->
+            <div in:fly={{ x: 20, duration: 600, delay: 100 }} class="space-y-8">
+                <div class="flex items-start justify-between gap-4">
                     <div>
-                        <p class="text-[10px] text-slate-500 font-black uppercase">Hatch Date</p>
-                        <p class="text-white font-bold">{new Date(creature.hatchedAt).toLocaleDateString()}</p>
+                        <span class="text-[10px] font-black uppercase tracking-[0.4em] {rarityColors[creature.rarity]}">
+                            {creature.rarity} SPECIES
+                        </span>
+                        <h1 class="text-6xl font-black text-white italic tracking-tighter uppercase leading-none mt-2">
+                            {creature.speciesName}
+                        </h1>
+                        
+                        {#if form?.message}
+                            <p class="text-red-500 text-[10px] font-black uppercase tracking-widest mt-2 animate-pulse">
+                                {form.message}
+                            </p>
+                        {/if}
+                    </div>
+
+                    <!-- Favorite Toggle -->
+                    <form method="POST" action="?/toggleFavorite" use:enhance>
+                        <input type="hidden" name="isFavorite" value={creature.isFavorite} />
+                        <button 
+                            type="submit"
+                            class="p-4 rounded-2xl border transition-all active:scale-90 {creature.isFavorite ? 'bg-yellow-400/10 border-yellow-400/50 text-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.2)]' : 'bg-white/5 border-white/10 text-slate-500 hover:text-white'}"
+                        >
+                            <Star size={24} fill={creature.isFavorite ? "currentColor" : "none"} />
+                        </button>
+                    </form>
+                </div>
+
+                <div class="grid grid-cols-1 gap-4">
+                    <div class="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center gap-4">
+                        <div class="p-3 bg-blue-500/10 rounded-xl text-blue-400">
+                            <Calendar size={20} />
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-500 font-black uppercase">Hatch Date</p>
+                            <p class="text-white font-bold">{new Date(creature.hatchedAt).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center gap-4 transition-colors hover:bg-white/[0.07]">
+                        <div class="p-3 rounded-xl {rarityBgColors[creature.rarity]} {rarityColors[creature.rarity]}">
+                            <Shield size={20} />
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-500 font-black uppercase">Tier Level</p>
+                            <p class="text-white font-black uppercase italic tracking-wider">
+                                {creature.rarity}
+                            </p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center gap-4 transition-colors hover:bg-white/[0.07]">
-                    <div class="p-3 rounded-xl {rarityBgColors[creature.rarity]} {rarityColors[creature.rarity]}">
-                        <Shield size={20} />
-                    </div>
-                    <div>
-                        <p class="text-[10px] text-slate-500 font-black uppercase">Tier Level</p>
-                        <p class="text-white font-black uppercase italic tracking-wider">
-                            {creature.rarity}
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <div class="pt-6 border-t border-white/5">
-                <form 
+                <div class="pt-6 border-t border-white/5">
+                    <form 
                         method="POST" 
                         action="?/release" 
                         use:enhance={({ cancel }) => {
@@ -94,9 +114,9 @@
                             Release to Wild (+5 💎)
                         </button>
                     </form>
+                </div>
             </div>
         </div>
-    </div>
     </div>
 {:else}
     <div class="flex flex-col items-center justify-center min-h-[60vh] gap-4">
