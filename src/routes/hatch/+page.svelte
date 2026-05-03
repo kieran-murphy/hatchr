@@ -22,7 +22,7 @@
         </div>
 
         <div class="text-center">
-            <p class="text-gray-500 font-medium italic">Cost: 10 Gems</p>
+            <p class="text-gray-500 font-medium italic">Cost: 100 Gems</p>
         </div>
     </div>
 
@@ -65,7 +65,7 @@
         }}
     >
         <button 
-            disabled={hatching || data.userGems < 10}
+            disabled={hatching || data.userGems < 100}
             class="group relative px-12 py-5 bg-blue-600 rounded-2xl font-black text-2xl overflow-hidden transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:grayscale cursor-pointer"
         >
             <span class="relative z-10 flex items-center gap-3">

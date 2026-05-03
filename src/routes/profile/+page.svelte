@@ -110,8 +110,8 @@
         </div>
 
         <footer class="mt-12 flex flex-col gap-3">
-            <a href="/collection" class="group flex items-center justify-center gap-2 w-full py-4 bg-white text-black font-black uppercase text-sm rounded-2xl transition-all hover:scale-[1.02] active:scale-95">
-                Back to Stable
+            <a href="/" class="group flex items-center justify-center gap-2 w-full py-4 bg-white text-black font-black uppercase text-sm rounded-2xl transition-all hover:scale-[1.02] active:scale-95">
+                Back to Collection
                 <ChevronRight size={18} strokeWidth={3} class="group-hover:translate-x-1 transition-transform" />
             </a>
         </footer>

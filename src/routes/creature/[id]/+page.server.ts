@@ -21,7 +21,7 @@ export const actions: Actions = {
         const session = locals.user;
         if (!session) throw redirect(302, '/login');
 
-        const RELEASE_REWARD = 5;
+        const RELEASE_REWARD = 50;
 
         try {
             await db.transaction(async (tx) => {

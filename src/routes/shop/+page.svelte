@@ -1,57 +1,99 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
+    import { onMount, onDestroy } from 'svelte';
     import type { SubmitFunction } from '@sveltejs/kit';
 
     let { data, form } = $props();
 
-    let openingAmount = $state<number | null>(null);
+    let isOpening = $state(false);
     let confettiGems = $state<{
-        id: number, 
-        left: number, 
-        delay: number, 
-        duration: number,
-        scale: number,
-        startRot: number,
-        endRot: number,
-        drift: number
+        id: number, left: number, delay: number, duration: number, scale: number, startRot: number, endRot: number, drift: number
     }[]>([]);
 
-    const bundles = [
-        { amount: 50, label: 'Bag of Gems', price: 'FREE', icon: '💰' },
-        { amount: 250, label: 'Box of Gems', price: 'FREE', icon: '🎁' },
-        { amount: 1000, label: 'Bank of Gems', price: 'FREE', icon: '🏛️' }
-    ];
+    let lastClaimed = $state<Date | null>(data.lastChestClaimedAt ? new Date(data.lastChestClaimedAt) : null);
+    let timeRemaining = $state('');
+    let isCooldown = $state(false);
+    let timerInterval: ReturnType<typeof setInterval>;
+    
+    const COOLDOWN_MS = 12 * 60 * 60 * 1000;
 
-    const handleClaim: SubmitFunction = ({ formData }) => {
-        const amount = Number(formData.get('amount'));
-        openingAmount = amount;
+    function updateTimer() {
+        if (!lastClaimed) {
+            isCooldown = false;
+            return;
+        }
 
-        const particleCount = Math.min(200, Math.max(30, Math.floor(amount / 5)));
+        const now = new Date();
+        const elapsed = now.getTime() - lastClaimed.getTime();
+        const remaining = COOLDOWN_MS - elapsed;
 
-        confettiGems = Array.from({ length: particleCount }).map((_, i) => {
-            const startRot = Math.random() * 360;
-            return {
-                id: i,
-                left: Math.random() * 100,
-                // Reduced max delay by 20% (from 1.5s to 1.2s)
-                delay: Number((Math.random() * 1.2).toFixed(2)),
-                // Reduced fall duration by 20% (from 1.5s-4s to 1.2s-3.2s)
-                duration: Number((Math.random() * 2.0 + 1.2).toFixed(2)), 
-                scale: Number((Math.random() * 0.8 + 0.6).toFixed(2)), 
-                startRot: startRot,
-                endRot: startRot + (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 180 + 90),
-                drift: Math.random() * 30 - 15 
-            };
-        });
+        if (remaining <= 0) {
+            isCooldown = false;
+            timeRemaining = '';
+            lastClaimed = null;
+            if (timerInterval) clearInterval(timerInterval);
+        } else {
 
-        return async ({ update }) => {
+            isCooldown = true;
+            const hours = Math.floor((remaining / (1000 * 60 * 60)) % 24);
+            const minutes = Math.floor((remaining / 1000 / 60) % 60);
+            const seconds = Math.floor((remaining / 1000) % 60);
+            
+            const mStr = minutes.toString().padStart(2, '0');
+            const sStr = seconds.toString().padStart(2, '0');
+            
+            timeRemaining = `${hours}h ${mStr}m ${sStr}s`;
+        }
+    }
+
+    onMount(() => {
+        updateTimer();
+        timerInterval = setInterval(updateTimer, 1000);
+    });
+
+    onDestroy(() => {
+        if (timerInterval) clearInterval(timerInterval);
+    });
+
+    const handleClaim: SubmitFunction = () => {
+        isOpening = true;
+
+        return async ({ result, update }) => {
             await update();
             
-            // Reduced cleanup wait time to match the new max animation length (1.2 + 3.2 = 4.4s)
-            setTimeout(() => {
-                openingAmount = null;
-                confettiGems = [];
-            }, 4000);
+            if (result.type === 'success' && result.data?.added) {
+                const amountAdded = Number(result.data.added);
+                
+                if (result.data.claimedAt) {
+                    lastClaimed = new Date(result.data.claimedAt as string);
+                    updateTimer();
+                    clearInterval(timerInterval);
+                    timerInterval = setInterval(updateTimer, 1000);
+                }
+
+                const particleCount = Math.min(200, Math.max(30, Math.floor(amountAdded / 5)));
+
+                confettiGems = Array.from({ length: particleCount }).map((_, i) => {
+                    const startRot = Math.random() * 360;
+                    return {
+                        id: i,
+                        left: Math.random() * 100,
+                        delay: Number((Math.random() * 0.3).toFixed(2)),
+                        duration: Number((Math.random() * 2.0 + 1.2).toFixed(2)), 
+                        scale: Number((Math.random() * 0.8 + 0.6).toFixed(2)), 
+                        startRot: startRot,
+                        endRot: startRot + (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 180 + 90),
+                        drift: Math.random() * 30 - 15 
+                    };
+                });
+
+                setTimeout(() => {
+                    isOpening = false;
+                    confettiGems = [];
+                }, 4500);
+            } else {
+                isOpening = false;
+            }
         };
     };
 </script>
@@ -62,43 +104,53 @@
         <p class="text-gray-500 mt-2 font-medium">Top up your balance to keep hatching!</p>
     </header>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {#each bundles as bundle (bundle.amount)}
-            <div class="bg-gray-900 border border-white/10 rounded-3xl p-6 flex flex-col items-center gap-4 transition-all hover:border-blue-500/50 hover:bg-blue-500/5 relative">
-                
-                {#if openingAmount === bundle.amount}
-                    <div class="absolute inset-0 bg-blue-500/20 blur-2xl z-0 rounded-3xl pointer-events-none animate-pulse"></div>
-                {/if}
+    <div class="max-w-md mx-auto">
+        <div class="bg-gray-900 border border-white/10 rounded-3xl p-8 flex flex-col items-center gap-6 transition-all hover:border-blue-500/50 hover:bg-blue-500/5 relative"
+             class:opacity-80={isCooldown}>
+            
+            {#if isOpening}
+                <div class="absolute inset-0 bg-blue-500/20 blur-2xl z-0 rounded-3xl pointer-events-none animate-pulse"></div>
+            {/if}
 
-                <div class="text-5xl origin-center inline-block z-10"
-                     class:chest-animating={openingAmount === bundle.amount}>
-                    {bundle.icon}
-                </div>
-                
-                <div class="text-center z-10">
-                    <h3 class="text-xl font-bold text-white">{bundle.label}</h3>
-                    <p class="text-blue-400 font-black text-2xl">+{bundle.amount} 💎</p>
-                </div>
-
-                <form method="POST" action="?/buyGems" use:enhance={handleClaim} class="w-full z-10">
-                    <input type="hidden" name="amount" value={bundle.amount} />
-                    <button 
-                        disabled={openingAmount !== null}
-                        class="w-full px-8 py-3 bg-white text-black font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed
-                               {openingAmount === null ? 'hover:bg-blue-500 hover:text-white cursor-pointer' : ''}">
-                        {#if openingAmount === bundle.amount}
-                            OPENING...
-                        {:else}
-                            CLAIM {bundle.price}
-                        {/if}
-                    </button>
-                </form>
+            <div class="text-7xl origin-center inline-block z-10"
+                 class:chest-animating={isOpening}
+                 class:grayscale={isCooldown}>
+                🎁
             </div>
-        {/each}
+            
+            <div class="text-center z-10">
+                <h3 class="text-2xl font-bold text-white">Mystery Chest</h3>
+                <p class="text-blue-400 font-black text-3xl mt-1">200 - 1000 💎</p>
+                <p class="text-gray-500 text-sm mt-2 font-medium">
+                    {#if isCooldown}
+                        Come back later for more!
+                    {:else}
+                        Amount is completely random!
+                    {/if}
+                </p>
+            </div>
+
+            <form method="POST" action="?/buyGems" use:enhance={handleClaim} class="w-full z-10 mt-2">
+                <button 
+                    disabled={isOpening || isCooldown}
+                    class="w-full px-8 py-4 bg-white text-black text-lg font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed
+                           {!(isOpening || isCooldown) ? 'hover:bg-blue-500 hover:text-white cursor-pointer' : ''}
+                           {isCooldown ? 'bg-gray-800 text-gray-400 border border-gray-700' : ''}">
+                    
+                    {#if isOpening}
+                        OPENING...
+                    {:else if isCooldown}
+                        🔒 {timeRemaining}
+                    {:else}
+                        CLAIM FREE
+                    {/if}
+                </button>
+            </form>
+        </div>
     </div>
 
-    {#if form?.success}
-        <div class="mt-12 p-4 bg-green-500/10 border border-green-500/20 text-green-400 rounded-2xl text-center font-bold animate-pulse">
+    {#if form?.success && !isOpening}
+        <div class="mt-12 max-w-md mx-auto p-4 bg-green-500/10 border border-green-500/20 text-green-400 rounded-2xl text-center font-bold animate-pulse">
             Successfully added {form.added} gems to your account!
         </div>
     {/if}
@@ -124,9 +176,8 @@
 {/if}
 
 <style>
-    /* Sped up the chest burst from 0.8s to 0.6s */
     .chest-animating {
-        animation: burst 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        animation: burst 0.7s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
     }
 
     @keyframes burst {
@@ -139,14 +190,14 @@
     }
 
     .gem-particle {
-        top: -10vh; 
+        top: -5vh; 
         animation: natural-fall var(--duration) ease-in forwards;
         animation-delay: var(--delay);
     }
 
     @keyframes natural-fall {
         0% { 
-            top: -10vh; 
+            top: -5vh; 
             transform: translateX(0) rotate(calc(var(--start-rot) * 1deg)) scale(var(--scale)); 
             opacity: 1; 
         }

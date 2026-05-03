@@ -25,7 +25,7 @@ export const actions = {
         const user = locals.user;
         if (!user) throw redirect(302, '/login');
 
-        const HATCH_COST = 10;
+        const HATCH_COST = 100;
 
         if (user.gems < HATCH_COST) {
             return fail(400, { message: "You're broke! Check your profile for gems." });

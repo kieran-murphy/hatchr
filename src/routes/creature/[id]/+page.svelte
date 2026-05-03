@@ -99,7 +99,7 @@
                         method="POST" 
                         action="?/release" 
                         use:enhance={({ cancel }) => {
-                            const confirmed = confirm("Are you sure? This creature will return to the wild for 5 Gems.");
+                            const confirmed = confirm("Are you sure? This creature will return to the wild for 50 Gems.");
                             if (!confirmed) {
                                 cancel();
                                 return;
@@ -111,7 +111,7 @@
                         }}
                     >
                         <button class="w-full py-4 bg-red-500/5 border border-red-500/20 text-red-500 font-black uppercase tracking-widest rounded-2xl hover:bg-red-500 hover:text-white transition-all active:scale-95 cursor-pointer">
-                            Release to Wild (+5 💎)
+                            Release to Wild (+50 💎)
                         </button>
                     </form>
                 </div>
@@ -121,6 +121,6 @@
 {:else}
     <div class="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <Loader2 class="animate-spin text-blue-500" size={48} />
-        <p class="text-slate-500 font-black uppercase text-[10px] tracking-widest">Syncing Nursery Data...</p>
+        <p class="text-slate-500 font-black uppercase text-[10px] tracking-widest">Syncing Collection Data...</p>
     </div>
 {/if}
