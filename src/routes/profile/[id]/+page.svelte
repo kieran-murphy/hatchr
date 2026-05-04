@@ -23,7 +23,15 @@
         
         <header class="mb-12 flex flex-col items-center text-center">
             <div class="w-24 h-24 bg-gradient-to-br from-blue-600 to-purple-600 rounded-3xl mb-6 flex items-center justify-center shadow-lg shadow-blue-500/20">
-                <User size={48} strokeWidth={2.5} class="text-white" />
+                {#if data.profile?.image}
+                    <img 
+                        src={data.profile.image} 
+                        alt={data.profile.name} 
+                        class="w-full h-full object-cover rounded-3xl" 
+                    />
+                {:else}
+                    <User size={48} strokeWidth={2.5} class="text-white" />
+                {/if}
             </div>
             <h1 class="text-5xl font-black tracking-tighter text-white uppercase italic">
                 {data.profile.name}

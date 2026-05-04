@@ -12,7 +12,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         id: userTable.id,
         name: userTable.name,
         gems: userTable.gems,
-        email: userTable.email
+        email: userTable.email,
+        image: userTable.image,
     })
     .from(userTable)
     .where(eq(userTable.id, targetId));
