@@ -25,17 +25,13 @@
                     <a href="/hatch" class="text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition">Hatch</a>
                     <a href="/" class="text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition">Collection</a>
                     <a href="/shop" class="text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition">Shop</a>
+                    <a href="/users" class="text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition">Users</a>
                 </div>
 
-                <div class="flex items-center gap-3 px-4 py-1.5 bg-white/5 border border-white/10 rounded-full shadow-inner">
-                    <span class="text-[10px] font-black text-blue-400 uppercase tracking-tighter">Gems</span>
-                    <span class="font-mono font-bold text-white leading-none">
-                        {user.gems?.toLocaleString() ?? 0}
-                    </span>
-                </div>
+                
 
                 <div class="flex items-center gap-4 pl-4 border-l border-white/10">
-                    <a href="/profile" class="text-sm font-bold text-gray-300 hover:text-white transition">
+                    <a href={`/profile/${user.id}`} class="text-sm font-bold text-gray-300 hover:text-white transition">
                         {user.name}
                     </a>
 
