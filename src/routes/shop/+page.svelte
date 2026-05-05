@@ -6,6 +6,9 @@
     let { data, form } = $props();
 
     let isOpening = $state(false);
+    let showRollingNumber = $state(false);
+    let displayAmount = $state(0);
+    
     let confettiGems = $state<{
         id: number, left: number, delay: number, duration: number, scale: number, startRot: number, endRot: number, drift: number
     }[]>([]);
@@ -15,7 +18,8 @@
     let isCooldown = $state(false);
     let timerInterval: ReturnType<typeof setInterval>;
     
-    const COOLDOWN_MS = 12 * 60 * 60 * 1000;
+    // const COOLDOWN_MS = 12 * 60 * 60 * 1000;
+    const COOLDOWN_MS = 20 * 1000;
 
     function updateTimer() {
         if (!lastClaimed) {
@@ -33,7 +37,6 @@
             lastClaimed = null;
             if (timerInterval) clearInterval(timerInterval);
         } else {
-
             isCooldown = true;
             const hours = Math.floor((remaining / (1000 * 60 * 60)) % 24);
             const minutes = Math.floor((remaining / 1000 / 60) % 60);
@@ -55,8 +58,32 @@
         if (timerInterval) clearInterval(timerInterval);
     });
 
+    function animateCount(start: number, end: number, duration: number): Promise<void> {
+        return new Promise((resolve) => {
+            let startTime: number | null = null;
+
+            function step(timestamp: number) {
+                if (!startTime) startTime = timestamp;
+                const progress = Math.min((timestamp - startTime) / duration, 1);
+                
+                // easeOutQuad easing for a nice slowdown effect at the end
+                const easeOut = 1 - (1 - progress) * (1 - progress);
+                displayAmount = Math.floor(easeOut * (end - start) + start);
+
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                } else {
+                    resolve();
+                }
+            }
+            window.requestAnimationFrame(step);
+        });
+    }
+
     const handleClaim: SubmitFunction = () => {
         isOpening = true;
+        showRollingNumber = true;
+        displayAmount = 0;
 
         return async ({ result, update }) => {
             await update();
@@ -71,14 +98,18 @@
                     timerInterval = setInterval(updateTimer, 1000);
                 }
 
-                const particleCount = Math.min(200, Math.max(30, Math.floor(amountAdded / 5)));
+                // 1. Wait for the number to count up (1.5 seconds)
+                await animateCount(0, amountAdded, 1500);
 
+                // 2. THEN do the diamond animation
+                const particleCount = Math.min(200, Math.max(30, Math.floor(amountAdded / 5)));
                 confettiGems = Array.from({ length: particleCount }).map((_, i) => {
                     const startRot = Math.random() * 360;
                     return {
                         id: i,
                         left: Math.random() * 100,
-                        delay: Number((Math.random() * 0.3).toFixed(2)),
+                        // delay: Number((Math.random() * 0.3).toFixed(2)),
+                        delay: 0,
                         duration: Number((Math.random() * 2.0 + 1.2).toFixed(2)), 
                         scale: Number((Math.random() * 0.8 + 0.6).toFixed(2)), 
                         startRot: startRot,
@@ -89,10 +120,12 @@
 
                 setTimeout(() => {
                     isOpening = false;
+                    showRollingNumber = false;
                     confettiGems = [];
                 }, 4500);
             } else {
                 isOpening = false;
+                showRollingNumber = false;
             }
         };
     };
@@ -120,7 +153,13 @@
             
             <div class="text-center z-10">
                 <h3 class="text-2xl font-bold text-white">Mystery Chest</h3>
-                <p class="text-blue-400 font-black text-3xl mt-1">200 - 1000 💎</p>
+                <p class="text-blue-400 font-black text-3xl mt-1">
+                    {#if showRollingNumber}
+                        {displayAmount} 💎
+                    {:else}
+                        ??? 💎
+                    {/if}
+                </p>
                 <p class="text-gray-500 text-sm mt-2 font-medium">
                     {#if isCooldown}
                         Come back later for more!
@@ -190,14 +229,14 @@
     }
 
     .gem-particle {
-        top: -5vh; 
+        top: -10vh; 
         animation: natural-fall var(--duration) ease-in forwards;
         animation-delay: var(--delay);
     }
 
     @keyframes natural-fall {
         0% { 
-            top: -5vh; 
+            top: -10vh; 
             transform: translateX(0) rotate(calc(var(--start-rot) * 1deg)) scale(var(--scale)); 
             opacity: 1; 
         }
