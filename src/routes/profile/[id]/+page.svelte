@@ -1,14 +1,20 @@
 <script lang="ts">
-    import { User, Mail, ShieldCheck, Gem, ChevronRight, Star, Swords, LayoutGrid, Fingerprint } from 'lucide-svelte/icons';
+    import { 
+        User, Mail, ShieldCheck, Gem, ChevronRight, Star, 
+        Swords, LayoutGrid, Fingerprint, Users, UserPlus, UserMinus 
+    } from 'lucide-svelte/icons';
     import { fly } from 'svelte/transition';
+    import { enhance } from '$app/forms';
+    
     let { data } = $props();
 
-    // Use derived state for favorites based on whoever's profile we are looking at
     let favorites = $derived(data.creatures?.filter(c => c.isFavorite) ?? []);
 
-    // Logic for new totals
     let totalCount = $derived(data.creatures?.length ?? 0);
     let uniqueTypes = $derived(new Set(data.creatures?.map(c => c.speciesName)).size);
+
+    let followerCount = $derived(data.profile?.followers?.length ?? 0);
+    let followingCount = $derived(data.profile?.following?.length ?? 0);
 
     const rarityBorders = {
         COMMON: 'border-white/5',
@@ -21,7 +27,7 @@
 <div class="max-w-3xl mx-auto py-16 px-6 relative">
     <div class="bg-[#0A0A0A]/60 border border-white/5 backdrop-blur-2xl rounded-[2.5rem] p-8 md:p-12 shadow-2xl">
         
-        <header class="mb-12 flex flex-col items-center text-center">
+        <header class="mb-8 flex flex-col items-center text-center">
             <div class="w-24 h-24 bg-gradient-to-br from-blue-600 to-purple-600 rounded-3xl mb-6 flex items-center justify-center shadow-lg shadow-blue-500/20">
                 {#if data.profile?.image}
                     <img 
@@ -41,7 +47,43 @@
             </p>
         </header>
 
-        <!-- TOP 4 SHOWCASE SECTION -->
+        <div class="flex flex-col items-center gap-6 mb-12">
+            <div class="flex gap-8 items-center justify-center">
+                <div class="text-center">
+                    <p class="text-white text-xl font-black italic">{followingCount}</p>
+                    <p class="text-gray-500 text-[9px] uppercase font-black tracking-widest">Following</p>
+                </div>
+                <div class="w-px h-8 bg-white/10"></div>
+                <div class="text-center">
+                    <p class="text-white text-xl font-black italic">{followerCount}</p>
+                    <p class="text-gray-500 text-[9px] uppercase font-black tracking-widest">Followers</p>
+                </div>
+            </div>
+
+            {#if !data.isOwnProfile}
+                <form 
+                    method="POST" 
+                    action="?/toggleFollow" 
+                    use:enhance
+                >
+                    <button 
+                        class="flex items-center gap-2 px-8 py-3 rounded-2xl font-black uppercase text-xs tracking-widest transition-all
+                        {data.isFollowing 
+                            ? 'bg-white/5 border border-white/10 text-white hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-500' 
+                            : 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:scale-105 active:scale-95'}"
+                    >
+                        {#if data.isFollowing}
+                            <UserMinus size={16} strokeWidth={3} />
+                            Unfollow
+                        {:else}
+                            <UserPlus size={16} strokeWidth={3} />
+                            Follow Trainer
+                        {/if}
+                    </button>
+                </form>
+            {/if}
+        </div>
+
         <section class="mb-12">
             <div class="flex items-center justify-between mb-6">
                 <h2 class="text-xs font-black text-white uppercase tracking-[0.3em] flex items-center gap-2">
@@ -73,10 +115,8 @@
             {/if}
         </section>
 
-        <!-- PRIVACY FILTERED STATS SECTION -->
         <div class="space-y-4">
             {#if data.isOwnProfile}
-                <!-- Only the owner sees their Gems and Email -->
                 <div class="group relative bg-white/5 border border-white/10 rounded-3xl p-8 transition-all hover:border-blue-500/30 overflow-hidden">
                     <div class="flex justify-between items-end">
                         <div>
@@ -101,7 +141,6 @@
                 </div>
             {/if}
 
-            <!-- COLLECTION TOTALS -->
             <div class="grid grid-cols-2 gap-4">
                 <div class="p-6 bg-[#0D0D0D] border border-white/5 rounded-2xl flex flex-col gap-1">
                     <p class="text-gray-500 text-[10px] uppercase font-black tracking-widest flex items-center gap-2">
