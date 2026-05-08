@@ -27,13 +27,32 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
     const isOwnProfile = locals.user?.id === targetId;
 
-    const [{ followerCount }] = await db.select({ followerCount: count() })
-        .from(follows)
-        .where(eq(follows.followingId, targetId));
+    const followersData = await db.select({
+        id: userTable.id,
+        name: userTable.name,
+        image: userTable.image,
+        creaturesCount: count(creatures.id)
+    })
+    .from(follows)
+    .innerJoin(userTable, eq(follows.followerId, userTable.id))
+    .leftJoin(creatures, eq(userTable.id, creatures.userId))
+    .where(eq(follows.followingId, targetId))
+    .groupBy(userTable.id);
 
-    const [{ followingCount }] = await db.select({ followingCount: count() })
-        .from(follows)
-        .where(eq(follows.followerId, targetId));
+    const followingData = await db.select({
+        id: userTable.id,
+        name: userTable.name,
+        image: userTable.image,
+        creaturesCount: count(creatures.id)
+    })
+    .from(follows)
+    .innerJoin(userTable, eq(follows.followingId, userTable.id))
+    .leftJoin(creatures, eq(userTable.id, creatures.userId))
+    .where(eq(follows.followerId, targetId))
+    .groupBy(userTable.id);
+
+    const mappedFollowers = followersData.map(user => ({ follower: user }));
+    const mappedFollowing = followingData.map(user => ({ following: user }));
 
     let isFollowing = false;
     if (locals.user && !isOwnProfile) {
@@ -50,8 +69,8 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     return {
         profile: {
             ...userData,
-            followers: { length: followerCount },
-            following: { length: followingCount }
+            followers: mappedFollowers,
+            following: mappedFollowing
         },
         creatures: userCreatures,
         isOwnProfile,

@@ -1,9 +1,9 @@
 <script lang="ts">
     import { 
         User, Mail, ShieldCheck, Gem, ChevronRight, Star, 
-        Swords, LayoutGrid, Fingerprint, Users, UserPlus, UserMinus 
+        Swords, LayoutGrid, Fingerprint, Users, UserPlus, UserMinus, X
     } from 'lucide-svelte/icons';
-    import { fly } from 'svelte/transition';
+    import { fly, fade } from 'svelte/transition';
     import { enhance } from '$app/forms';
     
     let { data } = $props();
@@ -16,12 +16,37 @@
     let followerCount = $derived(data.profile?.followers?.length ?? 0);
     let followingCount = $derived(data.profile?.following?.length ?? 0);
 
+    let isModalOpen = $state(false);
+    let modalType = $state<'followers' | 'following' | null>(null);
+
+    let activeModalList = $derived.by(() => {
+        if (modalType === 'followers') {
+            return data.profile?.followers?.map(f => f.follower) ?? [];
+        }
+        if (modalType === 'following') {
+            return data.profile?.following?.map(f => f.following) ?? [];
+        }
+        return [];
+    });
+
     const rarityBorders = {
         COMMON: 'border-white/5',
         RARE: 'border-blue-500/30',
         EPIC: 'border-purple-500/30',
         LEGENDARY: 'border-yellow-500/50 shadow-[0_0_20px_rgba(250,204,21,0.15)]'
     };
+
+    function openModal(type: 'followers' | 'following') {
+        modalType = type;
+        isModalOpen = true;
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+        isModalOpen = false;
+        setTimeout(() => modalType = null, 300);
+        document.body.style.overflow = '';
+    }
 </script>
 
 <div class="max-w-3xl mx-auto py-16 px-6 relative">
@@ -49,15 +74,23 @@
 
         <div class="flex flex-col items-center gap-6 mb-12">
             <div class="flex gap-8 items-center justify-center">
-                <div class="text-center">
+                <button 
+                    onclick={() => openModal('following')}
+                    class="text-center hover:scale-110 hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.3)] transition-all cursor-pointer"
+                >
                     <p class="text-white text-xl font-black italic">{followingCount}</p>
                     <p class="text-gray-500 text-[9px] uppercase font-black tracking-widest">Following</p>
-                </div>
+                </button>
+                
                 <div class="w-px h-8 bg-white/10"></div>
-                <div class="text-center">
+                
+                <button 
+                    onclick={() => openModal('followers')}
+                    class="text-center hover:scale-110 hover:drop-shadow-[0_0_10px_rgba(255,255,255,0.3)] transition-all cursor-pointer"
+                >
                     <p class="text-white text-xl font-black italic">{followerCount}</p>
                     <p class="text-gray-500 text-[9px] uppercase font-black tracking-widest">Followers</p>
-                </div>
+                </button>
             </div>
 
             {#if !data.isOwnProfile}
@@ -67,7 +100,7 @@
                     use:enhance
                 >
                     <button 
-                        class="flex items-center gap-2 px-8 py-3 rounded-2xl font-black uppercase text-xs tracking-widest transition-all
+                        class="flex items-center gap-2 px-8 py-3 rounded-2xl font-black uppercase text-xs tracking-widest transition-all cursor-pointer
                         {data.isFollowing 
                             ? 'bg-white/5 border border-white/10 text-white hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-500' 
                             : 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:scale-105 active:scale-95'}"
@@ -171,3 +204,73 @@
         </footer>
     </div>
 </div>
+
+{#if isModalOpen}
+    <div 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        in:fade={{ duration: 200 }}
+        out:fade={{ duration: 200 }}
+    >
+        <div class="absolute inset-0" onclick={closeModal} role="button" tabindex="0" onkeydown={(e) => e.key === 'Escape' && closeModal()}></div>
+        
+        <div 
+            class="relative w-full max-w-md bg-[#0A0A0A] border border-white/10 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
+            in:fly={{ y: 20, duration: 300, delay: 50 }}
+            out:fly={{ y: 20, duration: 200 }}
+        >
+            <div class="flex items-center justify-between p-6 border-b border-white/5">
+                <h3 class="text-lg font-black text-white uppercase italic tracking-wider">
+                    {modalType === 'followers' ? 'Followers' : 'Following'}
+                </h3>
+                <button 
+                    onclick={closeModal}
+                    class="p-2 text-gray-500 hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+                >
+                    <X size={20} strokeWidth={2.5} />
+                </button>
+            </div>
+
+            <div class="overflow-y-auto overscroll-contain flex-1 p-2">
+                {#if activeModalList.length > 0}
+                    <ul class="divide-y divide-white/5">
+                        {#each activeModalList as user}
+                            <li>
+                                <a 
+                                    href="/profile/{user.id}" 
+                                    onclick={closeModal}
+                                    class="flex items-center justify-between p-4 rounded-2xl hover:bg-white/5 transition-colors cursor-pointer group"
+                                >
+                                    <div class="flex items-center gap-4">
+                                        {#if user.image}
+                                            <img 
+                                                src={user.image} 
+                                                alt="{user.name}'s avatar" 
+                                                class="w-12 h-12 rounded-full object-cover border border-white/10 group-hover:border-blue-500 transition-colors"
+                                            />
+                                        {:else}
+                                            <div class="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center font-bold text-xl group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                                                {user.name?.charAt(0).toUpperCase()}
+                                            </div>
+                                        {/if}
+
+                                        <span class="text-white font-bold">{user.name}</span>
+                                    </div>
+                                    
+                                    <div class="text-emerald-400 font-bold bg-emerald-500/10 px-3 py-1.5 rounded-lg flex items-center gap-1.5">
+                                        {user.creaturesCount ?? user.creatures?.length ?? 0} 🥚
+                                    </div>
+                                </a>
+                            </li>
+                        {/each}
+                    </ul>
+                {:else}
+                    <div class="p-12 text-center">
+                        <p class="text-gray-500 text-sm font-bold uppercase tracking-widest">
+                            No users found
+                        </p>
+                    </div>
+                {/if}
+            </div>
+        </div>
+    </div>
+{/if}
