@@ -1,32 +1,34 @@
-// src/routes/api/users/search/+server.ts
 import { json } from '@sveltejs/kit';
-import { db } from '$lib/server/db';
-import { user as userTable } from '$lib/server/db/schema';
-import { ilike, or } from 'drizzle-orm';
 import type { RequestHandler } from './$types';
+import { db } from '$lib/server/db'; 
+import { user, creatures } from '$lib/server/db/schema';
+import { ilike, count, eq } from 'drizzle-orm';
 
-export const GET: RequestHandler = async ({ url, locals }) => {
-    if (!locals.user) return json({ error: 'Unauthorized' }, { status: 401 });
+export const GET: RequestHandler = async ({ url }) => {
+    const searchQuery = url.searchParams.get('q');
 
-    const query = url.searchParams.get('q');
-    
-    if (!query || query.length < 2) return json([]);
+    if (!searchQuery) {
+        return json([]);
+    }
 
     try {
-        const results = await db.select({
-            id: userTable.id,
-            username: userTable.name, 
-            gems: userTable.gems
-        })
-        .from(userTable)
-        .where(
-            ilike(userTable.name, `%${query}%`)
-        )
-        .limit(10);
+        const searchResults = await db
+            .select({
+                id: user.id,
+                username: user.name,
+                image: user.image,
+                creatures: count(creatures.id)
+            })
+            .from(user)
+            .leftJoin(creatures, eq(user.id, creatures.userId))
+            .where(ilike(user.name, `%${searchQuery}%`))
+            .groupBy(user.id)
+            .limit(10);
 
-        return json(results);
+        return json(searchResults);
+
     } catch (error) {
-        console.error('Search error:', error);
-        return json({ error: 'Failed to search users' }, { status: 500 });
+        console.error("Database error during search:", error);
+        return json({ error: "Failed to fetch users" }, { status: 500 });
     }
 };
