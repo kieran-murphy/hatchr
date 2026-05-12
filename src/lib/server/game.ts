@@ -10,10 +10,10 @@ const CREATURE_POOL: Record<Rarity, string[]> = {
 export function getRandomRarity(): Rarity {
     const roll = Math.random() * 100; 
 
-    if (roll < 3) return 'LEGENDARY';   // 1% chance
-    if (roll < 10) return 'RARE';        // 5% chance
+    if (roll < 3) return 'LEGENDARY';   // 3% chance
+    if (roll < 10) return 'RARE';        // 7% chance
     if (roll < 25) return 'UNCOMMON';   // 15% chance
-    return 'COMMON';                    // 79% chance
+    return 'COMMON';                    // 75% chance
 }
 
 export function getRandomType(rarity: Rarity): string {
