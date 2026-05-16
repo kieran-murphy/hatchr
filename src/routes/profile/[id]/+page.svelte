@@ -1,8 +1,5 @@
 <script lang="ts">
-    import { 
-        User, Mail, ShieldCheck, Gem, ChevronRight, Star, 
-        Swords, LayoutGrid, Fingerprint, Users, UserPlus, UserMinus, X
-    } from 'lucide-svelte/icons';
+    import { User, Mail, Gem, ChevronRight, Star, LayoutGrid, Fingerprint, UserPlus, UserMinus, X } from 'lucide-svelte/icons';
     import { fly, fade } from 'svelte/transition';
     import { enhance } from '$app/forms';
     
@@ -196,8 +193,19 @@
 
         <footer class="mt-12 flex flex-col gap-3">
             {#if data.isOwnProfile}
-                <a href="/" class="group flex items-center justify-center gap-2 w-full py-4 bg-white text-black font-black uppercase text-sm rounded-2xl transition-all hover:scale-[1.02]">
-                    Back to My Collection
+                <a 
+                    href="/" 
+                    class="group flex items-center justify-center gap-2 w-full py-4 bg-white text-black font-black uppercase text-sm rounded-2xl transition-all hover:scale-[1.02]"
+                >
+                    My Collection
+                    <ChevronRight size={18} strokeWidth={3} />
+                </a>
+            {:else}
+                <a 
+                    href="/profile/{data.profile.id}/collection" 
+                    class="group flex items-center justify-center gap-2 w-full py-4 bg-[#2563EB] text-white font-black italic uppercase text-sm rounded-2xl transition-all hover:scale-[1.02] shadow-[0_0_15px_rgba(37,99,235,0.3)]"
+                >
+                    See Collection
                     <ChevronRight size={18} strokeWidth={3} />
                 </a>
             {/if}
