@@ -37,7 +37,7 @@
                             {user.name}
                         </a>
 
-                        <form method="post" action="/demo/better-auth?/signOut" use:enhance>
+                        <form method="post" action="/login?/signOut" use:enhance>
                             <button class="p-2 text-gray-500 hover:text-red-400 transition-colors cursor-pointer" title="Sign Out">
                                 <LogOut size={18} strokeWidth={2.5} />
                             </button>
@@ -57,7 +57,7 @@
                     {/if}
                 </button>
             {:else}
-                <a href="/demo/better-auth/login" class="text-sm font-bold text-white bg-blue-600 px-6 py-2 rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20 active:scale-95">
+                <a href="/login" class="text-sm font-bold text-white bg-blue-600 px-6 py-2 rounded-xl hover:bg-blue-500 transition-all shadow-lg shadow-blue-600/20 active:scale-95">
                     Login
                 </a>
             {/if}
@@ -79,7 +79,7 @@
                         My Profile
                     </a>
 
-                    <form method="post" action="/demo/better-auth?/signOut" use:enhance onsubmit={() => isMobileMenuOpen = false}>
+                    <form method="post" action="/login?/signOut" use:enhance onsubmit={() => isMobileMenuOpen = false}>
                         <button class="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 text-red-400 font-bold text-xs uppercase tracking-widest hover:bg-red-500/20 transition-colors">
                             <LogOut size={14} strokeWidth={3} />
                             Sign Out
