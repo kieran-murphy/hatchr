@@ -63,7 +63,7 @@
 
                 <div class="text-center mt-2 space-y-1 z-10 relative">
                     <h2 class="text-4xl font-black text-white uppercase italic tracking-tighter drop-shadow-lg">{form.creature.speciesName}</h2>
-                    <a href="/users/{data.user.id}/collection" class="inline-block text-xs text-blue-500/60 hover:text-blue-400 transition-colors uppercase font-bold tracking-widest mt-2">
+                    <a href="/profile/{data.userId}/collection" class="inline-block text-xs text-blue-500/60 hover:text-blue-400 transition-colors uppercase font-bold tracking-widest mt-2">
                         View in Collection →
                     </a>
                 </div>
