@@ -113,3 +113,11 @@ export const sessionRelations = relations(session, ({ one }) => ({
 export const accountRelations = relations(account, ({ one }) => ({
   user: one(user, { fields: [account.userId], references: [user.id] }),
 }));
+
+export const creatureQueue = pgTable('creature_queue', {
+    id: text('id').primaryKey(),
+    speciesName: text('species_name').notNull(),
+    imageUrl: text('image_url').notNull(),
+    rarity: text('rarity').notNull(),
+    queuedAt: timestamp('queued_at').defaultNow().notNull()
+});

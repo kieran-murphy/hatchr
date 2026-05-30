@@ -44,7 +44,7 @@ export const actions: Actions = {
             }
         }
 
-        const randomAmount = Math.floor(Math.random() * (1000 - 200 + 1)) + 200;
+        const randomAmount = Math.floor(Math.random() * (600 - 200 + 1)) + 200;
 
         try {
             await db.update(userTable)
