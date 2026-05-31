@@ -33,7 +33,8 @@ async function generateSingleCreature() {
         body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: { responseModalities: ["image"] }
-        })
+        }),
+        signal: AbortSignal.timeout(100000) 
     });
 
     if (!response.ok) {
@@ -75,7 +76,7 @@ export async function maintainCreatureQueue() {
     try {
         const [{ value: currentCount }] = await db.select({ value: count() }).from(creatureQueue);
         
-        const TARGET_BUFFER = 6;
+        const TARGET_BUFFER = 10;
         const needed = TARGET_BUFFER - currentCount;
 
         if (needed <= 0) return;
@@ -84,11 +85,11 @@ export async function maintainCreatureQueue() {
 
         for (let i = 0; i < needed; i++) {
             try {
-                await generateSingleCreature();
+                await generateSingleCreature(); 
                 console.log(`Generated queued creature ${i + 1} of ${needed}`);
             } catch (error) {
                 console.error("Failed background generation:", error);
-                break; 
+                break;
             }
         }
     } finally {
