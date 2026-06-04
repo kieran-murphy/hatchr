@@ -1,8 +1,10 @@
 <script lang="ts">
+    import { resolve } from '$app/paths';
+
     let searchQuery = $state('');
     let results = $state<{ id: string, username: string, creatures: number, image: string | null }[]>([]);
     let isSearching = $state(false);
-    
+
     let debounceTimer: ReturnType<typeof setTimeout>;
 
     $effect(() => {
@@ -59,7 +61,7 @@
                     <ul class="divide-y divide-white/5">
                         {#each results as user (user.id)}
                             <li>
-                                <a href="/profile/{user.id}" class="flex items-center justify-between p-4 hover:bg-white/5 transition-colors cursor-pointer group">
+                                <a href={resolve(`/profile/${user.id}`)} class="flex items-center justify-between p-4 hover:bg-white/5 transition-colors cursor-pointer group">
                                     <div class="flex items-center gap-4">
                                         {#if user.image}
                                             <img 

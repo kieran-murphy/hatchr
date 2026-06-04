@@ -2,6 +2,7 @@
     import { enhance } from '$app/forms';
     import { Calendar, Shield, ChevronLeft, Loader2, Star } from 'lucide-svelte/icons';
     import { fly, fade } from 'svelte/transition';
+    import { resolve } from '$app/paths';
     
     let { data, form } = $props();
     let creature = $derived(data.creature);
@@ -23,7 +24,7 @@
 
 {#if creature}
     <div in:fade class="max-w-4xl mx-auto py-12 px-6">
-        <a href="/" class="inline-flex items-center gap-2 text-slate-500 hover:text-white transition-colors mb-8 group">
+        <a href={resolve('/')} class="inline-flex items-center gap-2 text-slate-500 hover:text-white transition-colors mb-8 group">
             <ChevronLeft size={18} class="group-hover:-translate-x-1 transition-transform" />
             BACK TO COLLECTION
         </a>

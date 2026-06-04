@@ -1,7 +1,8 @@
 <script lang="ts">
     import { page } from '$app/stores';
-    import { ChevronRight, Drill, ZapOff, Compass } from 'lucide-svelte/icons';
-    import { fade, fly } from 'svelte/transition';
+    import { ChevronRight, Drill, ZapOff } from 'lucide-svelte/icons';
+    import { fade } from 'svelte/transition';
+    import { resolve } from '$app/paths';
 </script>
 
 <div class="max-w-3xl mx-auto min-h-screen flex items-center justify-center py-16 px-6 relative">
@@ -11,7 +12,7 @@
     >
         
         <header class="mb-12 flex flex-col items-center">
-            <div class="w-24 h-24 bg-gradient-to-br from-blue-600 to-purple-600 rounded-3xl mb-6 flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <div class="w-24 h-24 bg-linear-to-br from-blue-600 to-purple-600 rounded-3xl mb-6 flex items-center justify-center shadow-lg shadow-blue-500/20">
                 <ZapOff size={48} strokeWidth={2.5} class="text-white" />
             </div>
             
@@ -34,7 +35,7 @@
         </div>
 
         <footer class="flex flex-col gap-3">
-            <a href="/" class="group flex items-center justify-center gap-2 w-full py-4 bg-white text-black font-black uppercase text-sm rounded-2xl transition-all hover:scale-[1.02]">
+            <a href={resolve('/')} class="group flex items-center justify-center gap-2 w-full py-4 bg-white text-black font-black uppercase text-sm rounded-2xl transition-all hover:scale-[1.02]">
                 Return to Safety
                 <ChevronRight size={18} strokeWidth={3} />
             </a>
@@ -45,10 +46,6 @@
 <style>
     :global(body) {
         background-color: #050505;
-    }
-
-    .animate-spin-slow {
-        animation: spin 4s linear infinite;
     }
 
     @keyframes spin {

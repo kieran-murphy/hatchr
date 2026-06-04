@@ -1,8 +1,9 @@
 <script lang="ts">
     import { flip } from 'svelte/animate';
     import { quintOut } from 'svelte/easing';
-    import { scale, fade } from 'svelte/transition';
+    import { scale } from 'svelte/transition';
     import { ListFilter, Shuffle } from 'lucide-svelte/icons';
+    import { resolve } from '$app/paths';
 
     let { data } = $props();
 
@@ -51,7 +52,7 @@
                 {data.creatures.length} Creatures
             </p>
         </div>
-        <a href="/hatch" class="rounded-xl bg-blue-600 px-6 py-3 font-black text-white transition hover:bg-blue-500 active:scale-95 shadow-lg shadow-blue-600/20 uppercase text-xs tracking-widest">
+        <a href={resolve('/hatch')} class="rounded-xl bg-blue-600 px-6 py-3 font-black text-white transition hover:bg-blue-500 active:scale-95 shadow-lg shadow-blue-600/20 uppercase text-xs tracking-widest">
             Hatch More
         </a>
     </div>
@@ -86,7 +87,7 @@
             class="rounded-[2.5rem] border border-white/5 bg-[#0A0A0A]/60 backdrop-blur-xl py-32 text-center"
         >
             <p class="mb-6 text-gray-500 font-medium">Your collection is empty.</p>
-            <a href="/hatch" class="font-black text-blue-500 uppercase tracking-widest hover:text-blue-400 transition-colors">
+            <a href={resolve('/hatch')} class="font-black text-blue-500 uppercase tracking-widest hover:text-blue-400 transition-colors">
                 Go Hatch →
             </a>
         </div>
@@ -99,7 +100,7 @@
                     class="group"
                 >
                 <a
-                    href="/creature/{creature.id}"
+                    href={resolve(`/creature/${creature.id}`)}
                     in:scale={{ duration: 300, start: 0.95 }}
                     class="group relative rounded-2xl border border-white/5 bg-[#0A0A0A]/60 backdrop-blur-md p-4 transition-all hover:-translate-y-2 hover:border-white/20 hover:bg-[#0D0D0D] block"
                 >

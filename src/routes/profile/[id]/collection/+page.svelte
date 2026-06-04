@@ -3,6 +3,7 @@
     import { quintOut } from 'svelte/easing';
     import { scale } from 'svelte/transition';
     import { ListFilter, Shuffle, ArrowLeft } from 'lucide-svelte/icons';
+    import { resolve } from '$app/paths';
 
     let { data } = $props();
 
@@ -54,7 +55,7 @@
             </div>
             
             <a 
-                href="/profile/{data.profileUser.id}" 
+                href={resolve(`/profile/${data.profileUser.id}`)} 
                 class="flex items-center gap-2 rounded-xl border border-white/10 bg-transparent px-6 py-3 font-bold text-gray-400 transition-all hover:bg-white/5 hover:text-white uppercase text-xs tracking-widest"
             >
                 <ArrowLeft size={16} />
@@ -99,7 +100,7 @@
                     class="group"
                 >
                     <a
-                        href="/creature/{creature.id}"
+                        href={resolve(`/creature/${creature.id}`)}
                         class="group relative rounded-2xl border border-white/5 bg-[#0A0A0A]/60 backdrop-blur-md p-4 transition-all hover:-translate-y-2 hover:border-white/20 hover:bg-[#0D0D0D] block"
                     >
                         <div class="mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-white/5 bg-black/40">

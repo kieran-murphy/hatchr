@@ -2,6 +2,7 @@
     import { User, Mail, Gem, ChevronRight, Star, LayoutGrid, Fingerprint, UserPlus, UserMinus, X } from 'lucide-svelte/icons';
     import { fly, fade } from 'svelte/transition';
     import { enhance } from '$app/forms';
+    import { resolve } from '$app/paths';
     
     let { data } = $props();
 
@@ -50,7 +51,7 @@
     <div class="bg-[#0A0A0A]/60 border border-white/5 backdrop-blur-2xl rounded-[2.5rem] p-8 md:p-12 shadow-2xl">
         
         <header class="mb-8 flex flex-col items-center text-center">
-            <div class="w-24 h-24 bg-gradient-to-br from-blue-600 to-purple-600 rounded-3xl mb-6 flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <div class="w-24 h-24 bg-linear-to-br from-blue-600 to-purple-600 rounded-3xl mb-6 flex items-center justify-center shadow-lg shadow-blue-500/20">
                 {#if data.profile?.image}
                     <img 
                         src={data.profile.image} 
@@ -129,17 +130,15 @@
             {:else}
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {#each favorites as fav (fav.id)}
+                        <a href={resolve(`/creature/${fav.id}`)} class="block">
                         <div 
                             in:fly={{ y: 20, duration: 400 }}
                             class="group relative aspect-square bg-[#0D0D0D] border rounded-3xl p-4 transition-all {rarityBorders[fav.rarity] || 'border-white/5'}"
                         >
                             <img src={fav.imageUrl} alt="" class="w-full h-full object-contain" />
-                            <div class="absolute inset-x-0 bottom-3 text-center">
-                                <p class="text-[9px] font-black text-white/50 uppercase italic truncate px-2">
-                                    {fav.speciesName}
-                                </p>
-                            </div>
+                            
                         </div>
+                        </a>
                     {/each}
                 </div>
             {/if}
@@ -185,7 +184,7 @@
                         <Fingerprint size={12} class="text-blue-400" />
                         Collected Types
                     </p>
-                    <p class="text-2xl font-black text-white italic">{uniqueTypes}/25</p>
+                    <p class="text-2xl font-black text-white italic">{uniqueTypes}/18</p>
                 </div>
             </div>
 
@@ -194,7 +193,7 @@
         <footer class="mt-12 flex flex-col gap-3">
             {#if data.isOwnProfile}
                 <a 
-                    href="/" 
+                    href={resolve('/')}
                     class="group flex items-center justify-center gap-2 w-full py-4 bg-white text-black font-black uppercase text-sm rounded-2xl transition-all hover:scale-[1.02]"
                 >
                     My Collection
@@ -202,7 +201,7 @@
                 </a>
             {:else}
                 <a 
-                    href="/profile/{data.profile.id}/collection" 
+                    href={resolve(`/profile/${data.profile.id}/collection`)} 
                     class="group flex items-center justify-center gap-2 w-full py-4 bg-[#2563EB] text-white font-black italic uppercase text-sm rounded-2xl transition-all hover:scale-[1.02] shadow-[0_0_15px_rgba(37,99,235,0.3)]"
                 >
                     See Collection
@@ -241,10 +240,10 @@
             <div class="overflow-y-auto overscroll-contain flex-1 p-2">
                 {#if activeModalList.length > 0}
                     <ul class="divide-y divide-white/5">
-                        {#each activeModalList as user}
+                        {#each activeModalList as user (user.id)}
                             <li>
                                 <a 
-                                    href="/profile/{user.id}" 
+                                    href={resolve(`/profile/${user.id}`)} 
                                     onclick={closeModal}
                                     class="flex items-center justify-between p-4 rounded-2xl hover:bg-white/5 transition-colors cursor-pointer group"
                                 >
