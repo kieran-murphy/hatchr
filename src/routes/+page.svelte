@@ -14,6 +14,9 @@
         LEGENDARY: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20 shadow-[0_0_15px_rgba(250,204,21,0.2)]'
     };
 
+    let visibleCreatures = $state(data.creatures);
+    let isLoading = $state(false);
+    let hasMore = $state(data.creatures.length === 20);
     let sortBy = $state('recent');
 
     const rarityWeight = {
@@ -24,7 +27,7 @@
     };
 
     let sortedCreatures = $derived.by(() => {
-        let list = [...data.creatures];
+        let list = [...visibleCreatures];
 
         if (sortBy === 'rarity') {
             return list.sort((a, b) => rarityWeight[b.rarity] - rarityWeight[a.rarity]);
@@ -41,51 +44,71 @@
         return list; 
     });
 
+    async function loadMore() {
+        if (isLoading || !hasMore) return;
+        isLoading = true;
+
+        const res = await fetch(`/api/collection?offset=${visibleCreatures.length}`);
+        const result = await res.json();
+
+        if (result.creatures && result.creatures.length > 0) {
+            visibleCreatures = [...visibleCreatures, ...result.creatures];
+            
+            if (result.creatures.length < 20) {
+                hasMore = false;
+            }
+        } else {
+            hasMore = false;
+        }
+
+        isLoading = false;
+    }
 </script>
 
 <div class="mx-auto max-w-7xl p-6 md:p-12">
     <header class="mb-12">
-    <div class="flex items-end justify-between mb-8">
-        <div>
-            <h1 class="text-5xl font-black tracking-tighter text-white uppercase italic">Your Collection</h1>
-            <p class="font-bold text-blue-500 uppercase text-[10px] tracking-widest mt-1">
-                {data.creatures.length} Creatures
-            </p>
+        <div class="flex items-end justify-between mb-8">
+            <div>
+                <h1 class="text-5xl font-black tracking-tighter text-white uppercase italic">Your Collection</h1>
+                <p class="font-bold text-blue-500 uppercase text-[10px] tracking-widest mt-1">
+                    {visibleCreatures.length} Creatures Loaded
+                </p>
+            </div>
+            <a href={resolve('/hatch')} class="rounded-xl bg-blue-600 px-6 py-3 font-black text-white transition hover:bg-blue-500 active:scale-95 shadow-lg shadow-blue-600/20 uppercase text-xs tracking-widest">
+                Hatch More
+            </a>
         </div>
-        <a href={resolve('/hatch')} class="rounded-xl bg-blue-600 px-6 py-3 font-black text-white transition hover:bg-blue-500 active:scale-95 shadow-lg shadow-blue-600/20 uppercase text-xs tracking-widest">
-            Hatch More
-        </a>
-    </div>
 
-    <div class="flex items-center gap-2 p-1 bg-white/5 border border-white/5 rounded-2xl w-fit">
-        <div class="px-3 text-slate-500">
-            <ListFilter size={16} />
-        </div>
-        
-        {#each ['recent', 'rarity', 'alphabetical'] as option (option)}
+        <div class="flex items-center gap-2 p-1 bg-white/5 border border-white/5 rounded-2xl w-fit">
+            <div class="px-3 text-slate-500">
+                <ListFilter size={16} />
+            </div>
+            
+            {#each ['recent', 'rarity', 'alphabetical'] as option (option)}
+                <button 
+                    onclick={() => sortBy = option}
+                    class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
+                    {sortBy === option ? 'bg-white text-black' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
+                >
+                    {option}
+                </button>
+            {/each}
+
             <button 
-                onclick={() => sortBy = option}
-                class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
-                {sortBy === option ? 'bg-white text-black' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
+                onclick={() => {
+                    sortBy = 'custom';
+                    visibleCreatures = [...visibleCreatures].sort(() => Math.random() - 0.5);
+                }}
+                class="p-2 text-slate-500 hover:text-blue-400 transition-colors"
+                title="Shuffle Collection"
             >
-                {option}
+                <Shuffle size={16} />
             </button>
-        {/each}
-
-        <button 
-            onclick={() => sortedCreatures = [...data.creatures].sort(() => Math.random() - 0.5)}
-            class="p-2 text-slate-500 hover:text-blue-400 transition-colors"
-            title="Shuffle Collection"
-        >
-            <Shuffle size={16} />
-        </button>
-    </div>
-</header>
+        </div>
+    </header>
 
     {#if sortedCreatures.length === 0}
-        <div
-            class="rounded-[2.5rem] border border-white/5 bg-[#0A0A0A]/60 backdrop-blur-xl py-32 text-center"
-        >
+        <div class="rounded-[2.5rem] border border-white/5 bg-[#0A0A0A]/60 backdrop-blur-xl py-32 text-center">
             <p class="mb-6 text-gray-500 font-medium">Your collection is empty.</p>
             <a href={resolve('/hatch')} class="font-black text-blue-500 uppercase tracking-widest hover:text-blue-400 transition-colors">
                 Go Hatch →
@@ -99,36 +122,41 @@
                     in:scale={{ duration: 300, start: 0.9 }}
                     class="group"
                 >
-                <a
-                    href={resolve(`/creature/${creature.id}`)}
-                    in:scale={{ duration: 300, start: 0.95 }}
-                    class="group relative rounded-2xl border border-white/5 bg-[#0A0A0A]/60 backdrop-blur-md p-4 transition-all hover:-translate-y-2 hover:border-white/20 hover:bg-[#0D0D0D] block"
-                >
-                    <div
-                        class="mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-white/5 bg-black/40"
+                    <a
+                        href={resolve(`/creature/${creature.id}`)}
+                        class="group relative rounded-2xl border border-white/5 bg-[#0A0A0A]/60 backdrop-blur-md p-4 transition-all hover:-translate-y-2 hover:border-white/20 hover:bg-[#0D0D0D] block"
                     >
-                        <img
-                            src={creature.imageUrl}
-                            alt={creature.speciesName}
-                            class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                    </div>
+                        <div class="mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-white/5 bg-black/40">
+                            <img
+                                src={creature.imageUrl}
+                                alt={creature.speciesName}
+                                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                            />
+                        </div>
 
-                    <div class="space-y-2">
-                        <span
-                            class="inline-block rounded border px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter {rarityColors[
-                                creature.rarity
-                            ]}"
-                        >
-                            {creature.rarity}
-                        </span>
-                        <h3 class="text-lg leading-tight font-black italic tracking-tighter text-white uppercase group-hover:text-blue-400 transition-colors">
-                            {creature.speciesName}
-                        </h3>
-                    </div>
-                </a>
+                        <div class="space-y-2">
+                            <span class="inline-block rounded border px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter {rarityColors[creature.rarity]}">
+                                {creature.rarity}
+                            </span>
+                            <h3 class="text-lg leading-tight font-black italic tracking-tighter text-white uppercase group-hover:text-blue-400 transition-colors">
+                                {creature.speciesName}
+                            </h3>
+                        </div>
+                    </a>
                 </div>
             {/each}
         </div>
+
+        {#if hasMore}
+            <div class="mt-12 flex justify-center">
+                <button 
+                    onclick={loadMore} 
+                    disabled={isLoading}
+                    class="w-full md:w-auto px-12 py-4 bg-white/5 text-white text-xs tracking-widest font-black uppercase border border-white/10 rounded-2xl hover:bg-white/10 hover:border-white/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 cursor-pointer"
+                >
+                    {isLoading ? 'Summoning...' : 'Load More Creatures'}
+                </button>
+            </div>
+        {/if}
     {/if}
 </div>

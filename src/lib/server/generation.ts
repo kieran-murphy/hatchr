@@ -23,7 +23,7 @@ async function generateSingleCreature() {
     const speciesName = getRandomType(rarity);
     const aura = getAuraStyle(rarity);
     
-    const prompt = `A cute, cartoon style digital art of a ${speciesName} species creature. It features a ${aura}, and a ${speciesName}-related background. No words on the image and make it a square image.`;
+    const prompt = `A cute, cartoon style digital art of a ${speciesName} species creature. It features a ${aura}, and a ${speciesName}-related background. No words on the image and make it a square image with no border.`;
 
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${env.GEMINI_API_KEY}`;
     

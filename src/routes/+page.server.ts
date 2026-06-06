@@ -11,7 +11,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 
     const userCreatures = await db.query.creatures.findMany({
         where: eq(creatures.userId, locals.user.id),
-        orderBy: [desc(creatures.hatchedAt)]
+        orderBy: [desc(creatures.hatchedAt)],
+        limit: 20 
     });
 
     return {
