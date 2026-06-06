@@ -7,6 +7,7 @@
     let { data, form } = $props();
     
     let hatching = $state(false);
+    let isDual = $state(false);
 
     const rarityStyles = {
         COMMON: 'text-gray-400 border-gray-400/20 bg-gray-400/5 shadow-[0_0_20px_rgba(156,163,175,0.1)]',
@@ -31,10 +32,23 @@
             <span class="text-[10px] font-black text-blue-400 uppercase tracking-widest">Balance</span>
             <span class="text-xl font-mono font-bold text-blue-400">{data.userGems?.toLocaleString() ?? 0} 💎</span>
         </div>
+    </div>
 
-        <div class="text-center">
-            <p class="text-gray-500 font-medium italic">Cost: 100 Gems</p>
-        </div>
+    <div class="flex bg-white/5 p-1 rounded-2xl border border-white/5">
+        <button 
+            onclick={() => isDual = false}
+            disabled={hatching}
+            class="px-6 py-3 rounded-xl font-black text-xs uppercase transition-all {!isDual ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-white'}"
+        >
+            Single (100 💎)
+        </button>
+        <button 
+            onclick={() => isDual = true}
+            disabled={hatching}
+            class="px-6 py-3 rounded-xl font-black text-xs uppercase transition-all {isDual ? 'bg-purple-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.3)]' : 'text-gray-500 hover:text-white'}"
+        >
+            Dual (200 💎)
+        </button>
     </div>
 
     <div class="min-h-[300px] grid place-items-center relative">
@@ -55,15 +69,23 @@
                         alt="New Creature" 
                         class="relative z-10 w-56 h-56 object-cover rounded-3xl bg-black/80 border-2 border-white/10 p-2 transition-transform duration-500 hover:scale-105"
                     />
-                    <div class="absolute z-20 -bottom-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-lg bg-[#0A0A0A] border border-white/20 shadow-xl">
+                    <div class="absolute z-20 -bottom-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-lg bg-[#0A0A0A] border border-white/20 shadow-xl flex items-center gap-2">
                         <span class="text-[11px] font-black uppercase tracking-tighter {rarityStyles[form.creature.rarity].split(' ')[0]}">
                             {form.creature.rarity}
                         </span>
                     </div>
                 </div>
 
-                <div class="text-center mt-2 space-y-1 z-10 relative">
+                <div class="text-center mt-2 space-y-2 z-10 relative">
                     <h2 class="text-4xl font-black text-white uppercase italic tracking-tighter drop-shadow-lg">{form.creature.speciesName}</h2>
+                    
+                    <div class="flex justify-center gap-2">
+                        <span class="px-2 py-1 bg-white/10 rounded text-[10px] font-bold text-gray-300 uppercase tracking-wider">{form.creature.type1}</span>
+                        {#if form.creature.type2}
+                            <span class="px-2 py-1 bg-white/10 rounded text-[10px] font-bold text-gray-300 uppercase tracking-wider">{form.creature.type2}</span>
+                        {/if}
+                    </div>
+
                     <a href={resolve(`/profile/${data.userId}/collection`)} class="inline-block text-xs text-blue-500/60 hover:text-blue-400 transition-colors uppercase font-bold tracking-widest mt-2">
                         View in Collection →
                     </a>
@@ -90,9 +112,10 @@
             };
         }}
     >
+        <input type="hidden" name="isDual" value={isDual.toString()} />
         <button 
-            disabled={hatching || data.userGems < 100}
-            class="group relative px-14 py-5 bg-blue-600 rounded-2xl font-black text-2xl overflow-hidden transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:grayscale cursor-pointer shadow-[0_0_20px_rgba(37,99,235,0.4)]"
+            disabled={hatching || data.userGems < (isDual ? 200 : 100)}
+            class="group relative px-14 py-5 {isDual ? 'bg-purple-600 shadow-[0_0_20px_rgba(147,51,234,0.4)]' : 'bg-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.4)]'} rounded-2xl font-black text-2xl overflow-hidden transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:grayscale cursor-pointer"
         >
             <span class="relative z-10 flex items-center gap-3 text-white">
                 {#if hatching}

@@ -1,8 +1,8 @@
 import { db } from '$lib/server/db';
-import { user as userTable, creatures, creatureQueue } from '$lib/server/db/schema';
+import { user as userTable, creatures, creatureQueue, dualCreatureQueue } from '$lib/server/db/schema';
 import { eq, sql, asc } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
-import { maintainCreatureQueue } from '$lib/server/generation';
+import { maintainCreatureQueue, maintainDualCreatureQueue } from '$lib/server/generation';
 
 export const load = async ({ locals }) => {
     if (!locals.user) throw redirect(302, '/login');
@@ -19,25 +19,29 @@ export const load = async ({ locals }) => {
 };
 
 export const actions = {
-    default: async ({ locals }) => {
+    default: async ({ locals, request }) => {
         const user = locals.user;
         if (!user) throw redirect(302, '/login');
 
-        const HATCH_COST = 100;
+        const formData = await request.formData();
+        const isDual = formData.get('isDual') === 'true';
+        const HATCH_COST = isDual ? 200 : 100;
+        
+        const targetQueue = isDual ? dualCreatureQueue : creatureQueue;
 
         if (user.gems < HATCH_COST) {
-            return fail(400, { message: "You're broke! Check your profile for gems." });
+            return fail(400, { message: `You need ${HATCH_COST} gems for this hatch!` });
         }
 
         try {
             const [queuedCreature] = await db
                 .select()
-                .from(creatureQueue)
-                .orderBy(asc(creatureQueue.queuedAt))
+                .from(targetQueue)
+                .orderBy(asc(targetQueue.queuedAt))
                 .limit(1);
 
             if (!queuedCreature) {
-                return fail(503, { message: "Incubator warming up! Try again in 5 seconds." });
+                return fail(503, { message: "Incubator empty! Please wait a moment." });
             }
 
             const result = await db.transaction(async (tx) => {
@@ -45,24 +49,31 @@ export const actions = {
                     .set({ gems: sql`${userTable.gems} - ${HATCH_COST}` })
                     .where(eq(userTable.id, user.id));
 
-                await tx.delete(creatureQueue).where(eq(creatureQueue.id, queuedCreature.id));
+                await tx.delete(targetQueue).where(eq(targetQueue.id, queuedCreature.id));
 
                 const [newCreature] = await tx.insert(creatures).values({
                     userId: user.id,
                     speciesName: queuedCreature.speciesName,
                     rarity: queuedCreature.rarity,
-                    imageUrl: queuedCreature.imageUrl
+                    imageUrl: queuedCreature.imageUrl,
+                    type1: queuedCreature.type1,
+                    type2: 'type2' in queuedCreature ? queuedCreature.type2 : null
                 }).returning();
 
                 return newCreature;
             });
 
-            Promise.resolve().then(() => maintainCreatureQueue()).catch(console.error);
+            // Trigger background refill for the specific queue
+            if (isDual) {
+                Promise.resolve().then(() => maintainDualCreatureQueue()).catch(console.error);
+            } else {
+                Promise.resolve().then(() => maintainCreatureQueue()).catch(console.error);
+            }
 
             return { success: true, creature: result };
         } catch (error) {
             console.error(error);
-            return fail(500, { message: "The egg refused to crack. Your gems have been refunded. Try again later!" });
+            return fail(500, { message: "The egg refused to crack. Try again later!" });
         }
     }
 };

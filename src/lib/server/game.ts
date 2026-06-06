@@ -1,19 +1,25 @@
 export type Rarity = 'COMMON' | 'UNCOMMON' | 'RARE' | 'LEGENDARY';
 
-const CREATURE_POOL: Record<Rarity, string[]> = {
-    COMMON: ['Water', 'Grass', 'Fire', 'Normal', 'Bug', 'Rock', 'Steel', 'Poison'],
-    UNCOMMON: ['Electric', 'Ground', 'Ice', 'Flying'],
-    RARE: ['Fighting', 'Dark', 'Psychic', 'Ghost'],
-    LEGENDARY: ['Fairy', 'Dragon']
+export const rarityWeight: Record<Rarity, number> = {
+    COMMON: 1,
+    UNCOMMON: 2,
+    RARE: 3,
+    LEGENDARY: 4
 };
 
-export function getRandomRarity(): Rarity {
-    const roll = Math.random() * 100; 
+export const CREATURE_POOL: Record<Rarity, string[]> = {
+    COMMON: ['Water', 'Grass', 'Fire', 'Poison', 'Ground'], 
+    UNCOMMON: ['Electric', 'Ice', 'Dark'],
+    RARE: ['Ghost', 'Psychic'],
+    LEGENDARY: ['Cosmic', 'Dragon', 'Crystal']
+};
 
-    if (roll < 3) return 'LEGENDARY';   // 3% chance
-    if (roll < 10) return 'RARE';        // 7% chance
-    if (roll < 25) return 'UNCOMMON';   // 15% chance
-    return 'COMMON';                    // 75% chance
+export const TYPE_RARITY_MAP: Record<string, Rarity> = {};
+
+for (const [rarity, types] of Object.entries(CREATURE_POOL)) {
+    for (const type of types) {
+        TYPE_RARITY_MAP[type] = rarity as Rarity;
+    }
 }
 
 export function getRandomType(rarity: Rarity): string {

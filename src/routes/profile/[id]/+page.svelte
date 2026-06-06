@@ -184,7 +184,7 @@
                         <Fingerprint size={12} class="text-blue-400" />
                         Collected Types
                     </p>
-                    <p class="text-2xl font-black text-white italic">{uniqueTypes}/18</p>
+                    <p class="text-2xl font-black text-white italic">{uniqueTypes}/105</p>
                 </div>
             </div>
 
