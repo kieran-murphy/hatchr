@@ -21,8 +21,6 @@ export const actions: Actions = {
         const session = locals.user;
         if (!session) throw redirect(302, '/login');
 
-        const RELEASE_REWARD = 50;
-
         try {
             await db.transaction(async (tx) => {
                 const result = await tx.delete(creatures)
@@ -34,12 +32,16 @@ export const actions: Actions = {
 
                 if (result.length === 0) throw new Error("Unauthorized");
 
+                const deletedCreature = result[0];
+                
+                const rewardAmount = deletedCreature.type2 ? 100 : 50;
+
                 await tx.update(userTable)
-                    .set({ gems: sql`${userTable.gems} + ${RELEASE_REWARD}` })
+                    .set({ gems: sql`${userTable.gems} + ${rewardAmount}` })
                     .where(eq(userTable.id, session.id));
             });
         } catch (e) {
-            return fail(500, { message: "Could not release creature." });
+            return fail(500, { message: e });
         }
         
         throw redirect(303, '/');

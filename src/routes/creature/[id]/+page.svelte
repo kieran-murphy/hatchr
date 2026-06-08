@@ -6,6 +6,8 @@
     
     let { data, form } = $props();
     let creature = $derived(data.creature);
+    
+    let releaseReward = $derived(creature?.type2 ? 100 : 50);
 
     const rarityColors = {
         COMMON: 'text-gray-400',
@@ -30,7 +32,6 @@
         </a>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <!-- Visual Section -->
             <div in:fly={{ x: -20, duration: 600 }} class="relative group">
                 <div class="absolute inset-0 bg-blue-600/20 blur-[100px] rounded-full -z-10 group-hover:bg-blue-600/30 transition-colors"></div>
                 
@@ -41,7 +42,6 @@
                 />
             </div>
 
-            <!-- Data Section -->
             <div in:fly={{ x: 20, duration: 600, delay: 100 }} class="space-y-8">
                 <div class="flex items-start justify-between gap-4">
                     <div>
@@ -59,7 +59,6 @@
                         {/if}
                     </div>
 
-                    <!-- Favorite Toggle -->
                     <form method="POST" action="?/toggleFavorite" use:enhance>
                         <input type="hidden" name="isFavorite" value={creature.isFavorite} />
                         <button 
@@ -100,7 +99,7 @@
                         method="POST" 
                         action="?/release" 
                         use:enhance={({ cancel }) => {
-                            const confirmed = confirm("Are you sure? This creature will return to the wild for 50 Gems.");
+                            const confirmed = confirm(`Are you sure? This creature will return to the wild for ${releaseReward} Gems.`);
                             if (!confirmed) {
                                 cancel();
                                 return;
@@ -112,7 +111,7 @@
                         }}
                     >
                         <button class="w-full py-4 bg-red-500/5 border border-red-500/20 text-red-500 font-black uppercase tracking-widest rounded-2xl hover:bg-red-500 hover:text-white transition-all active:scale-95 cursor-pointer">
-                            Release to Wild (+50 💎)
+                            Release to Wild (+{releaseReward} 💎)
                         </button>
                     </form>
                 </div>
