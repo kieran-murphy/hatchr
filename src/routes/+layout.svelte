@@ -31,6 +31,7 @@
                         <a href={resolve('/')} class="text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition">Collection</a>
                         <a href={resolve('/shop')} class="text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition">Shop</a>
                         <a href={resolve('/users')} class="text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition">Users</a>
+                        <a href={resolve('/leaderboard')} class="text-xs font-black uppercase tracking-widest text-gray-400 hover:text-white transition">Leaderboard</a>
                     </div>
 
                     <div class="flex items-center gap-4 pl-8 border-l border-white/10">
@@ -73,6 +74,7 @@
                     <a href={resolve('/')} onclick={() => isMobileMenuOpen = false} class="text-lg font-black uppercase tracking-widest text-gray-400 hover:text-white transition active:scale-95 origin-left">Collection</a>
                     <a href={resolve('/shop')} onclick={() => isMobileMenuOpen = false} class="text-lg font-black uppercase tracking-widest text-gray-400 hover:text-white transition active:scale-95 origin-left">Shop</a>
                     <a href={resolve('/users')} onclick={() => isMobileMenuOpen = false} class="text-lg font-black uppercase tracking-widest text-gray-400 hover:text-white transition active:scale-95 origin-left">Users</a>
+                    <a href={resolve('/leaderboard')} onclick={() => isMobileMenuOpen = false} class="text-lg font-black uppercase tracking-widest text-gray-400 hover:text-white transition active:scale-95 origin-left">Leaderboard</a>
                 </div>
                 
                 <div class="pt-6 mt-2 border-t border-white/10 flex items-center justify-between">

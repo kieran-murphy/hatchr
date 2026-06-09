@@ -252,6 +252,7 @@
                                             <img 
                                                 src={user.image} 
                                                 alt="{user.name}'s avatar" 
+                                                referrerpolicy="no-referrer"
                                                 class="w-12 h-12 rounded-full object-cover border border-white/10 group-hover:border-blue-500 transition-colors"
                                             />
                                         {:else}

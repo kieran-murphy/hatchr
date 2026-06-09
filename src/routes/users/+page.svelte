@@ -67,6 +67,7 @@
                                             <img 
                                                 src={user.image} 
                                                 alt="{user.username}'s avatar" 
+                                                referrerpolicy="no-referrer"
                                                 class="w-10 h-10 rounded-full object-cover border border-white/10 group-hover:border-blue-500 transition-colors"
                                             />
                                         {:else}
