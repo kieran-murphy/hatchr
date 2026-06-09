@@ -14,10 +14,31 @@
         LEGENDARY: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20 shadow-[0_0_15px_rgba(250,204,21,0.2)]'
     };
 
+    const AVAILABLE_TYPES = ['All', 'Cosmic', 'Crystal', 'Dark', 'Dragon', 'Electric', 'Fire', 'Ghost', 'Grass', 'Ground', 'Ice', 'Poison', 'Psychic', 'Water'];
+
+    const typeStyles: Record<string, { text: string, dot: string }> = {
+        'All': { text: 'text-white', dot: 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.6)]' },
+        'Cosmic': { text: 'text-fuchsia-400', dot: 'bg-fuchsia-400 shadow-[0_0_10px_rgba(232,121,249,0.6)]' },
+        'Crystal': { text: 'text-cyan-300', dot: 'bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.6)]' },
+        'Dark': { text: 'text-indigo-400', dot: 'bg-indigo-400 shadow-[0_0_10px_rgba(129,140,248,0.6)]' },
+        'Dragon': { text: 'text-orange-500', dot: 'bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.6)]' },
+        'Electric': { text: 'text-yellow-300', dot: 'bg-yellow-300 shadow-[0_0_10px_rgba(253,224,71,0.6)]' },
+        'Fire': { text: 'text-red-500', dot: 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.6)]' },
+        'Ghost': { text: 'text-purple-400', dot: 'bg-purple-400 shadow-[0_0_10px_rgba(192,132,252,0.6)]' },
+        'Grass': { text: 'text-green-400', dot: 'bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.6)]' },
+        'Ground': { text: 'text-amber-500', dot: 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.6)]' },
+        'Ice': { text: 'text-sky-300', dot: 'bg-sky-300 shadow-[0_0_10px_rgba(125,211,252,0.6)]' },
+        'Poison': { text: 'text-emerald-400', dot: 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.6)]' },
+        'Psychic': { text: 'text-pink-400', dot: 'bg-pink-400 shadow-[0_0_10px_rgba(244,114,182,0.6)]' },
+        'Water': { text: 'text-blue-500', dot: 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)]' }
+    };
+
     let visibleCreatures = $state(data.creatures);
     let isLoading = $state(false);
     let hasMore = $state(data.creatures.length === 20);
     let sortBy = $state('recent');
+    let filterType = $state('All');
+    let isTypeMenuOpen = $state(false);
 
     const rarityWeight = {
         'LEGENDARY': 4,
@@ -44,11 +65,25 @@
         return list; 
     });
 
+    async function applyTypeFilter(newType: string) {
+        if (filterType === newType) return;
+        
+        filterType = newType;
+        isLoading = true;
+        
+        const res = await fetch(`/api/collection?offset=0&type=${filterType}`);
+        const result = await res.json();
+        
+        visibleCreatures = result.creatures || [];
+        hasMore = visibleCreatures.length === 20;
+        isLoading = false;
+    }
+
     async function loadMore() {
         if (isLoading || !hasMore) return;
         isLoading = true;
 
-        const res = await fetch(`/api/collection?offset=${visibleCreatures.length}`);
+        const res = await fetch(`/api/collection?offset=${visibleCreatures.length}&type=${filterType}`);
         const result = await res.json();
 
         if (result.creatures && result.creatures.length > 0) {
@@ -79,37 +114,83 @@
             </a>
         </div>
 
-        <div class="flex items-center gap-2 p-1 bg-white/5 border border-white/5 rounded-2xl w-fit">
-            <div class="px-3 text-slate-500">
-                <ListFilter size={16} />
-            </div>
-            
-            {#each ['recent', 'rarity', 'alphabetical'] as option (option)}
-                <button 
-                    onclick={() => sortBy = option}
-                    class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
-                    {sortBy === option ? 'bg-white text-black' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
-                >
-                    {option}
-                </button>
-            {/each}
+        <div class="flex flex-wrap items-center gap-4">
+            <div class="flex items-center gap-2 p-1 bg-white/5 border border-white/5 rounded-2xl w-fit">
+                <div class="px-3 text-slate-500">
+                    <ListFilter size={16} />
+                </div>
+                
+                {#each ['recent', 'rarity', 'alphabetical'] as option (option)}
+                    <button 
+                        onclick={() => sortBy = option}
+                        class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
+                        {sortBy === option ? 'bg-white text-black' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
+                    >
+                        {option}
+                    </button>
+                {/each}
 
-            <button 
-                onclick={() => {
-                    sortBy = 'custom';
-                    visibleCreatures = [...visibleCreatures].sort(() => Math.random() - 0.5);
-                }}
-                class="p-2 text-slate-500 hover:text-blue-400 transition-colors"
-                title="Shuffle Collection"
-            >
-                <Shuffle size={16} />
-            </button>
+                <button 
+                    onclick={() => {
+                        sortBy = 'custom';
+                        visibleCreatures = [...visibleCreatures].sort(() => Math.random() - 0.5);
+                    }}
+                    class="p-2 text-slate-500 hover:text-blue-400 transition-colors"
+                    title="Shuffle Collection"
+                >
+                    <Shuffle size={16} />
+                </button>
+            </div>
+
+            <div class="relative">
+                <button 
+                    onclick={() => isTypeMenuOpen = !isTypeMenuOpen}
+                    class="flex items-center gap-3 bg-white/5 border border-white/5 rounded-2xl px-5 py-3 hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                    <div class="w-3 h-3 rounded-full {typeStyles[filterType].dot}"></div>
+                    <span class="text-[10px] font-black uppercase tracking-widest {typeStyles[filterType].text}">
+                        {filterType}
+                    </span>
+                    <svg class="h-3 w-3 text-slate-500 transition-transform {isTypeMenuOpen ? 'rotate-180' : ''}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                    </svg>
+                </button>
+
+                {#if isTypeMenuOpen}
+                    <button 
+                        class="fixed inset-0 w-full h-full z-40 cursor-default" 
+                        onclick={() => isTypeMenuOpen = false}
+                        aria-label="Close type menu"
+                    ></button>
+                    
+                    <div 
+                        in:scale={{ duration: 150, start: 0.95 }}
+                        class="absolute left-0 mt-2 w-48 max-h-80 overflow-y-auto bg-[#0A0A0A]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-2 z-50 flex flex-col shadow-2xl custom-scrollbar"
+                    >
+                        {#each AVAILABLE_TYPES as type (type)}
+                            <button 
+                                onclick={() => { applyTypeFilter(type); isTypeMenuOpen = false; }}
+                                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-white/5 w-full text-left {filterType === type ? 'bg-white/10' : ''}"
+                            >
+                                <div class="w-2.5 h-2.5 rounded-full {typeStyles[type].dot}"></div>
+                                <span class="text-[10px] font-black uppercase tracking-widest {typeStyles[type].text}">
+                                    {type}
+                                </span>
+                            </button>
+                        {/each}
+                    </div>
+                {/if}
+            </div>
         </div>
     </header>
 
     {#if sortedCreatures.length === 0}
         <div class="rounded-[2.5rem] border border-white/5 bg-[#0A0A0A]/60 backdrop-blur-xl py-32 text-center">
-            <p class="mb-6 text-gray-500 font-medium">Your collection is empty.</p>
+            {#if filterType !== 'All'}
+                <p class="mb-6 text-gray-500 font-medium">No <span class={typeStyles[filterType].text}>{filterType}</span>-type creatures found in your collection.</p>
+            {:else}
+                <p class="mb-6 text-gray-500 font-medium">Your collection is empty.</p>
+            {/if}
             <a href={resolve('/hatch')} class="font-black text-blue-500 uppercase tracking-widest hover:text-blue-400 transition-colors">
                 Go Hatch →
             </a>
@@ -160,3 +241,19 @@
         {/if}
     {/if}
 </div>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+</style>
