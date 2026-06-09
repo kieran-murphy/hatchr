@@ -59,7 +59,7 @@
                 out:fade={{ duration: 200 }} 
                 class="col-start-1 row-start-1 flex flex-col items-center gap-6 relative"
             >
-                <div class={`absolute inset-0 top-[-20px] rounded-full animate-splash ${getSplashColor(form.creature.rarity)}`}></div>
+                <div class={`pointer-events-none absolute inset-0 top-[-20px] rounded-full animate-splash ${getSplashColor(form.creature.rarity)}`}></div>
 
                 <div class="relative group z-10">
                     <div class="absolute inset-0 rounded-3xl {rarityStyles[form.creature.rarity].split(' ').find(c => c.startsWith('shadow-')) || ''} blur-xl transition-all duration-500"></div>
