@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { User, Mail, Gem, ChevronRight, Star, LayoutGrid, Fingerprint, UserPlus, UserMinus, X } from 'lucide-svelte/icons';
+    import { User, Mail, Gem, ChevronRight, Star, LayoutGrid, Fingerprint, UserPlus, UserMinus, X } from '@lucide/svelte';
     import { fly, fade } from 'svelte/transition';
     import { enhance } from '$app/forms';
     import { resolve } from '$app/paths';

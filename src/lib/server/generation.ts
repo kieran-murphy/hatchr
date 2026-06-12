@@ -6,6 +6,7 @@ import { count } from 'drizzle-orm';
 import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { faker } from '@faker-js/faker';
 
 const AVAILABLE_TYPES = Object.keys(TYPE_RARITY_MAP);
 const QUEUE_TARGET = 10;
@@ -39,6 +40,13 @@ async function generateAndSaveImage(prompt: string): Promise<string> {
         }),
         signal: AbortSignal.timeout(100000) 
     });
+
+    if (!response.ok) {
+        // Add this line to see the real reason in your terminal
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Gemini API Error Details:', JSON.stringify(errorData, null, 2));
+        throw new Error(`Failed to generate AI image: ${response.statusText}`); 
+    }
 
     if (!response.ok) throw new Error('Failed to generate AI image'); 
 
@@ -77,7 +85,9 @@ async function createCreatureData(isDual: boolean) {
 
     return {
         id: randomUUID(),
-        speciesName: isDual ? `${types[0]}/${types[1]}` : `${types[0]}`,
+        // Using faker for the name, stored in speciesName
+        speciesName: faker.person.firstName(), 
+        description: faker.commerce.productDescription(),
         imageUrl,
         rarity: finalRarity,
         type1: types[0],
@@ -100,6 +110,7 @@ export async function maintainCreatureQueue() {
                     await db.insert(creatureQueue).values({
                         id: data.id,
                         speciesName: data.speciesName,
+                        description: data.description,
                         imageUrl: data.imageUrl,
                         rarity: data.rarity,
                         type1: data.type1
@@ -129,6 +140,7 @@ export async function maintainDualCreatureQueue() {
                     await db.insert(dualCreatureQueue).values({
                         id: data.id,
                         speciesName: data.speciesName,
+                        description: data.description,
                         imageUrl: data.imageUrl,
                         rarity: data.rarity,
                         type1: data.type1,

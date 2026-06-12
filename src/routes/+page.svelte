@@ -2,7 +2,7 @@
     import { flip } from 'svelte/animate';
     import { quintOut } from 'svelte/easing';
     import { scale } from 'svelte/transition';
-    import { ListFilter, Shuffle } from 'lucide-svelte/icons';
+    import { ListFilter, Shuffle } from '@lucide/svelte';
     import { resolve } from '$app/paths';
 
     let { data } = $props();

@@ -40,6 +40,7 @@ export const creatures = pgTable('creatures', {
 		.notNull()
 		.references(() => user.id, { onDelete: 'cascade' }),
 	speciesName: text('species_name').notNull(),
+	description: text('description').notNull(),
 	rarity: rarityEnum('rarity').default('COMMON').notNull(),
 	imageUrl: text('image_url').notNull(),
 	type1: text('type1').notNull(),
@@ -112,6 +113,7 @@ export const verification = pgTable(
 export const creatureQueue = pgTable('creature_queue', {
 	id: text('id').primaryKey(),
 	speciesName: text('species_name').notNull(),
+	description: text('description').notNull(),
 	imageUrl: text('image_url').notNull(),
 	rarity: text('rarity').notNull(),
 	queuedAt: timestamp('queued_at').defaultNow().notNull(),
@@ -122,6 +124,7 @@ export const creatureQueue = pgTable('creature_queue', {
 export const dualCreatureQueue = pgTable('dual_creature_queue', {
 	id: text('id').primaryKey(),
 	speciesName: text('species_name').notNull(),
+	description: text('description').notNull(),
 	imageUrl: text('image_url').notNull(),
 	rarity: text('rarity').notNull(),
 	type1: text('type1').notNull(),

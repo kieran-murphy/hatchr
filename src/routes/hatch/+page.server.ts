@@ -54,6 +54,7 @@ export const actions = {
                 const [newCreature] = await tx.insert(creatures).values({
                     userId: user.id,
                     speciesName: queuedCreature.speciesName,
+                    description: queuedCreature.description,
                     rarity: queuedCreature.rarity,
                     imageUrl: queuedCreature.imageUrl,
                     type1: queuedCreature.type1,

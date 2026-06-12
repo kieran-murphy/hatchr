@@ -2,7 +2,7 @@
     import './layout.css';
     import { page } from '$app/stores';
     import { enhance } from '$app/forms';
-    import { Menu, X, LogOut } from 'lucide-svelte/icons';
+    import { Menu, X, LogOut } from '@lucide/svelte';
     import { resolve } from '$app/paths';
 
     let { children } = $props();

@@ -1,6 +1,6 @@
 <script lang="ts">
     import { page } from '$app/stores';
-    import { ChevronRight, Drill, ZapOff } from 'lucide-svelte/icons';
+    import { ChevronRight, Drill, ZapOff } from '@lucide/svelte';
     import { fade } from 'svelte/transition';
     import { resolve } from '$app/paths';
 </script>

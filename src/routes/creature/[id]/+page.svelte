@@ -1,6 +1,6 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
-    import { Calendar, Shield, ChevronLeft, Loader2, Star } from 'lucide-svelte/icons';
+    import { Calendar, Shield, ChevronLeft, Loader2, Star, Hexagon } from '@lucide/svelte';
     import { fly, fade } from 'svelte/transition';
     import { resolve } from '$app/paths';
     
@@ -21,6 +21,23 @@
         RARE: 'bg-blue-400/10',
         EPIC: 'bg-purple-400/10',
         LEGENDARY: 'bg-yellow-400/10'
+    };
+
+    const typeStyles: Record<string, { text: string, dot: string }> = {
+        'All': { text: 'text-white', dot: 'bg-white shadow-[0_0_10px_rgba(255,255,255,0.6)]' },
+        'Cosmic': { text: 'text-fuchsia-400', dot: 'bg-fuchsia-400 shadow-[0_0_10px_rgba(232,121,249,0.6)]' },
+        'Crystal': { text: 'text-cyan-300', dot: 'bg-cyan-300 shadow-[0_0_10px_rgba(103,232,249,0.6)]' },
+        'Dark': { text: 'text-indigo-400', dot: 'bg-indigo-400 shadow-[0_0_10px_rgba(129,140,248,0.6)]' },
+        'Dragon': { text: 'text-orange-500', dot: 'bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.6)]' },
+        'Electric': { text: 'text-yellow-300', dot: 'bg-yellow-300 shadow-[0_0_10px_rgba(253,224,71,0.6)]' },
+        'Fire': { text: 'text-red-500', dot: 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.6)]' },
+        'Ghost': { text: 'text-purple-400', dot: 'bg-purple-400 shadow-[0_0_10px_rgba(192,132,252,0.6)]' },
+        'Grass': { text: 'text-green-400', dot: 'bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.6)]' },
+        'Ground': { text: 'text-amber-500', dot: 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.6)]' },
+        'Ice': { text: 'text-sky-300', dot: 'bg-sky-300 shadow-[0_0_10px_rgba(125,211,252,0.6)]' },
+        'Poison': { text: 'text-emerald-400', dot: 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.6)]' },
+        'Psychic': { text: 'text-pink-400', dot: 'bg-pink-400 shadow-[0_0_10px_rgba(244,114,182,0.6)]' },
+        'Water': { text: 'text-blue-500', dot: 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)]' }
     };
 </script>
 
@@ -78,6 +95,35 @@
                         <div>
                             <p class="text-[10px] text-slate-500 font-black uppercase">Hatch Date</p>
                             <p class="text-white font-bold">{new Date(creature.hatchedAt).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white/5 border border-white/10 rounded-2xl p-4 flex items-center gap-4 transition-colors hover:bg-white/[0.07]">
+                        <div class="p-3 bg-white/5 rounded-xl text-slate-400">
+                            <Hexagon size={20} />
+                        </div>
+                        <div>
+                            <p class="text-[10px] text-slate-500 font-black uppercase">Creature Type</p>
+                            <div class="flex items-center gap-3 mt-1 flex-wrap">
+                                {#if creature.type1}
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-2 h-2 rounded-full {typeStyles[creature.type1]?.dot || typeStyles['All'].dot}"></div>
+                                        <span class="font-black uppercase italic tracking-wider text-sm {typeStyles[creature.type1]?.text || typeStyles['All'].text}">
+                                            {creature.type1}
+                                        </span>
+                                    </div>
+                                {/if}
+                                
+                                {#if creature.type2}
+                                    <span class="text-slate-600 font-black">/</span>
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-2 h-2 rounded-full {typeStyles[creature.type2]?.dot || typeStyles['All'].dot}"></div>
+                                        <span class="font-black uppercase italic tracking-wider text-sm {typeStyles[creature.type2]?.text || typeStyles['All'].text}">
+                                            {creature.type2}
+                                        </span>
+                                    </div>
+                                {/if}
+                            </div>
                         </div>
                     </div>
 
