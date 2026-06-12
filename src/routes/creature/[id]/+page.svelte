@@ -65,7 +65,7 @@
                         <span class="text-[10px] font-black uppercase tracking-[0.4em] {rarityColors[creature.rarity]}">
                             {creature.rarity} SPECIES
                         </span>
-                        <h1 class="text-6xl font-black text-white italic tracking-tighter uppercase leading-none mt-2">
+                        <h1 class="text-4xl md:text-6xl font-black text-white italic tracking-tighter uppercase leading-none mt-2 break-words hyphens-auto">
                             {creature.speciesName}
                         </h1>
                         
