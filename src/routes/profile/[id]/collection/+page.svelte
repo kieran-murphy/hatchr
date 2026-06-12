@@ -44,9 +44,9 @@
 
 <div class="mx-auto max-w-7xl p-6 md:p-12">
     <header class="mb-12">
-        <div class="flex items-end justify-between mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-8">
             <div>
-                <h1 class="text-5xl font-black tracking-tighter text-white uppercase italic">
+                <h1 class="text-4xl md:text-5xl font-black tracking-tighter text-white uppercase italic">
                     {data.profileUser.name}'s Collection
                 </h1>
                 <p class="font-bold text-blue-500 uppercase text-[10px] tracking-widest mt-1">
@@ -56,34 +56,26 @@
             
             <a 
                 href={resolve(`/profile/${data.profileUser.id}`)} 
-                class="flex items-center gap-2 rounded-xl border border-white/10 bg-transparent px-6 py-3 font-bold text-gray-400 transition-all hover:bg-white/5 hover:text-white uppercase text-xs tracking-widest"
+                class="flex w-full sm:w-auto justify-center items-center gap-2 rounded-xl border border-white/10 bg-transparent px-6 py-3 font-bold text-gray-400 transition-all hover:bg-white/5 hover:text-white uppercase text-xs tracking-widest"
             >
                 <ArrowLeft size={16} />
                 Back to Profile
             </a>
         </div>
 
-        <div class="flex items-center gap-2 p-1 bg-white/5 border border-white/5 rounded-2xl w-fit">
-            <div class="px-3 text-slate-500">
+        <div class="flex items-center gap-2 p-1 bg-white/5 border border-white/5 rounded-2xl w-full md:w-fit overflow-x-auto custom-scrollbar">
+            <div class="px-3 text-slate-500 shrink-0">
                 <ListFilter size={16} />
             </div>
             
             {#each ['recent', 'rarity', 'alphabetical'] as option (option)}
                 <button 
                     onclick={() => sortBy = option}
-                    class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all {sortBy === option ? 'bg-white text-black' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
+                    class="shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all {sortBy === option ? 'bg-white text-black' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
                 >
                     {option}
                 </button>
             {/each}
-
-            <button 
-                onclick={() => sortedCreatures = [...data.creatures].sort(() => Math.random() - 0.5)}
-                class="p-2 text-slate-500 hover:text-blue-400 transition-colors"
-                title="Shuffle Collection"
-            >
-                <Shuffle size={16} />
-            </button>
         </div>
     </header>
 
@@ -125,3 +117,20 @@
         </div>
     {/if}
 </div>
+
+<style>
+    .custom-scrollbar::-webkit-scrollbar {
+        height: 4px; /* Specifically for the horizontal scrollbar */
+        width: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.2);
+    }
+</style>

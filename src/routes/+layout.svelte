@@ -82,7 +82,7 @@
                         My Profile
                     </a>
 
-                    <form method="post" action={resolve('/login?/signOut')} use:enhance onsubmit={() => isMobileMenuOpen = false}>
+                    <form method="post" action={resolve('/login?/signOut')} use:enhance>
                         <button class="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 text-red-400 font-bold text-xs uppercase tracking-widest hover:bg-red-500/20 transition-colors">
                             <LogOut size={14} strokeWidth={3} />
                             Sign Out

@@ -4,9 +4,9 @@ import { eq, sql } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
-// const COOLDOWN_HOURS = 12;
-// const COOLDOWN_MS = COOLDOWN_HOURS * 60 * 60 * 1000;
-const COOLDOWN_MS = 20 * 1000; 
+const COOLDOWN_HOURS = 0.5; // 30 minutes cooldown
+const COOLDOWN_MS = COOLDOWN_HOURS * 60 * 60 * 1000;
+// const COOLDOWN_MS = 20 * 1000; // For testing purposes, set cooldown to 20 seconds
 
 export const load: PageServerLoad = async ({ locals }) => {
     if (!locals.user) throw redirect(302, '/login');

@@ -33,9 +33,9 @@
         'Water': { text: 'text-blue-500', dot: 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)]' }
     };
 
-    let visibleCreatures = $state(data.creatures);
-    let isLoading = $state(false);
-    let hasMore = $state(data.creatures.length === 20);
+    let visibleCreatures = $derived(data.creatures);
+    let isLoading = $derived(false);
+    let hasMore = $derived(data.creatures.length === 20);
     let sortBy = $state('recent');
     let filterType = $state('All');
     let isTypeMenuOpen = $state(false);
@@ -102,55 +102,47 @@
 
 <div class="mx-auto max-w-7xl p-6 md:p-12">
     <header class="mb-12">
-        <div class="flex items-end justify-between mb-8">
+        <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-8">
             <div>
-                <h1 class="text-5xl font-black tracking-tighter text-white uppercase italic">Your Collection</h1>
+                <h1 class="text-4xl md:text-5xl font-black tracking-tighter text-white uppercase italic">Your Collection</h1>
                 <p class="font-bold text-blue-500 uppercase text-[10px] tracking-widest mt-1">
                     {visibleCreatures.length} Creatures Loaded
                 </p>
             </div>
-            <a href={resolve('/hatch')} class="rounded-xl bg-blue-600 px-6 py-3 font-black text-white transition hover:bg-blue-500 active:scale-95 shadow-lg shadow-blue-600/20 uppercase text-xs tracking-widest">
+            <a href={resolve('/hatch')} class="w-full sm:w-auto text-center rounded-xl bg-blue-600 px-6 py-3 font-black text-white transition hover:bg-blue-500 active:scale-95 shadow-lg shadow-blue-600/20 uppercase text-xs tracking-widest">
                 Hatch More
             </a>
         </div>
 
         <div class="flex flex-wrap items-center gap-4">
-            <div class="flex items-center gap-2 p-1 bg-white/5 border border-white/5 rounded-2xl w-fit">
-                <div class="px-3 text-slate-500">
+            <div class="flex items-center gap-2 p-1 bg-white/5 border border-white/5 rounded-2xl w-full md:w-fit overflow-x-auto custom-scrollbar">
+                <div class="px-3 text-slate-500 shrink-0">
                     <ListFilter size={16} />
                 </div>
                 
                 {#each ['recent', 'rarity', 'alphabetical'] as option (option)}
                     <button 
                         onclick={() => sortBy = option}
-                        class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
+                        class="shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
                         {sortBy === option ? 'bg-white text-black' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
                     >
                         {option}
                     </button>
                 {/each}
 
-                <button 
-                    onclick={() => {
-                        sortBy = 'custom';
-                        visibleCreatures = [...visibleCreatures].sort(() => Math.random() - 0.5);
-                    }}
-                    class="p-2 text-slate-500 hover:text-blue-400 transition-colors"
-                    title="Shuffle Collection"
-                >
-                    <Shuffle size={16} />
-                </button>
             </div>
 
-            <div class="relative">
+            <div class="relative w-full md:w-auto">
                 <button 
                     onclick={() => isTypeMenuOpen = !isTypeMenuOpen}
-                    class="flex items-center gap-3 bg-white/5 border border-white/5 rounded-2xl px-5 py-3 hover:bg-white/10 transition-colors cursor-pointer"
+                    class="w-full md:w-auto flex items-center justify-between gap-3 bg-white/5 border border-white/5 rounded-2xl px-5 py-3 hover:bg-white/10 transition-colors cursor-pointer"
                 >
-                    <div class="w-3 h-3 rounded-full {typeStyles[filterType].dot}"></div>
-                    <span class="text-[10px] font-black uppercase tracking-widest {typeStyles[filterType].text}">
-                        {filterType}
-                    </span>
+                    <div class="flex items-center gap-3">
+                        <div class="w-3 h-3 rounded-full {typeStyles[filterType].dot}"></div>
+                        <span class="text-[10px] font-black uppercase tracking-widest {typeStyles[filterType].text}">
+                            {filterType}
+                        </span>
+                    </div>
                     <svg class="h-3 w-3 text-slate-500 transition-transform {isTypeMenuOpen ? 'rotate-180' : ''}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
                     </svg>
@@ -165,7 +157,7 @@
                     
                     <div 
                         in:scale={{ duration: 150, start: 0.95 }}
-                        class="absolute left-0 mt-2 w-48 max-h-80 overflow-y-auto bg-[#0A0A0A]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-2 z-50 flex flex-col shadow-2xl custom-scrollbar"
+                        class="absolute left-0 mt-2 w-full md:w-48 max-h-80 overflow-y-auto bg-[#0A0A0A]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-2 z-50 flex flex-col shadow-2xl custom-scrollbar"
                     >
                         {#each AVAILABLE_TYPES as type (type)}
                             <button 
@@ -183,7 +175,6 @@
             </div>
         </div>
     </header>
-
     {#if sortedCreatures.length === 0}
         <div class="rounded-[2.5rem] border border-white/5 bg-[#0A0A0A]/60 backdrop-blur-xl py-32 text-center">
             {#if filterType !== 'All'}

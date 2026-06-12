@@ -13,9 +13,32 @@ const QUEUE_TARGET = 10;
 let isGeneratingSingle = false;
 let isGeneratingDual = false;
 
-function selectRandomTypes(amount: number) {
-    const shuffled = [...AVAILABLE_TYPES].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, amount);
+function selectRandomTypes(amount: number): string[] {
+    const selectedTypes = new Set<string>();
+
+    while (selectedTypes.size < amount) {
+        // 1. Roll a number between 1 and 100
+        const roll = Math.random() * 100;
+        
+        // 2. Determine which rarity tier won the roll
+        let targetRarity = 'COMMON';
+        if (roll > 60 && roll <= 85) targetRarity = 'UNCOMMON';
+        if (roll > 85 && roll <= 96) targetRarity = 'RARE';
+        if (roll > 96) targetRarity = 'LEGENDARY';
+
+        // 3. Filter your available types to only those that match the winning rarity
+        const eligibleTypes = AVAILABLE_TYPES.filter(type => 
+            TYPE_RARITY_MAP[type] === targetRarity
+        );
+
+        // 4. Pick a random type from that specific rarity pool
+        if (eligibleTypes.length > 0) {
+            const randomEligibleType = eligibleTypes[Math.floor(Math.random() * eligibleTypes.length)];
+            selectedTypes.add(randomEligibleType);
+        }
+    }
+
+    return Array.from(selectedTypes);
 }
 
 function getAuraStyle(rarity: string): string {

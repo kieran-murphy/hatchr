@@ -15,7 +15,7 @@ export const user = pgTable('user', {
 		.$onUpdate(() => new Date())
 		.notNull(),
 	lastChestClaimedAt: timestamp('last_chest_claimed_at', { mode: 'date' }),
-	gems: integer('gems').default(100).notNull()
+	gems: integer('gems').default(500).notNull()
 });
 
 export const follows = pgTable(

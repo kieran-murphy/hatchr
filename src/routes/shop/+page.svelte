@@ -13,13 +13,13 @@
         id: number, left: number, delay: number, duration: number, scale: number, startRot: number, endRot: number, drift: number
     }[]>([]);
 
-    let lastClaimed = $state<Date | null>(data.lastChestClaimedAt ? new Date(data.lastChestClaimedAt) : null);
+    let lastClaimed = $derived<Date | null>(data.lastChestClaimedAt ? new Date(data.lastChestClaimedAt) : null);
     let timeRemaining = $state('');
     let isCooldown = $state(false);
     let timerInterval: ReturnType<typeof setInterval>;
     
-    // const COOLDOWN_MS = 12 * 60 * 60 * 1000;
-    const COOLDOWN_MS = 20 * 1000;
+    const COOLDOWN_MS = 0.5 * 60 * 60 * 1000;
+    // const COOLDOWN_MS = 20 * 1000;
 
     function updateTimer() {
         if (!lastClaimed) {
