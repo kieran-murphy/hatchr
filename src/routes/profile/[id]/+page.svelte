@@ -9,7 +9,11 @@
     let favorites = $derived(data.creatures?.filter(c => c.isFavorite) ?? []);
 
     let totalCount = $derived(data.creatures?.length ?? 0);
-    let uniqueTypes = $derived(new Set(data.creatures?.map(c => c.speciesName)).size);
+    let uniqueTypes = $derived(new Set(
+        data.creatures?.map(c => 
+            c.type2 ? [c.type1, c.type2].sort().join('-') : c.type1
+        )
+    ).size);
 
     let followerCount = $derived(data.profile?.followers?.length ?? 0);
     let followingCount = $derived(data.profile?.following?.length ?? 0);
