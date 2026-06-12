@@ -69,6 +69,12 @@
                             {creature.speciesName}
                         </h1>
                         
+                        {#if creature.description}
+                            <p class="text-slate-400 text-sm leading-relaxed mt-6 border-l-2 border-white/10 pl-4">
+                                {creature.description}
+                            </p>
+                        {/if}
+                        
                         {#if form?.message}
                             <p class="text-red-500 text-[10px] font-black uppercase tracking-widest mt-2 animate-pulse">
                                 {form.message}

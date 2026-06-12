@@ -6,7 +6,6 @@ import { count } from 'drizzle-orm';
 import fs from 'node:fs';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { faker } from '@faker-js/faker';
 
 const AVAILABLE_TYPES = Object.keys(TYPE_RARITY_MAP);
 const QUEUE_TARGET = 10;
@@ -28,6 +27,44 @@ function getAuraStyle(rarity: string): string {
     }
 }
 
+async function generateCreatureText(types: string[], rarity: string): Promise<{ name: string; description: string }> {
+    const typeString = types.join(' and ');
+    const prompt = `You are a creative assistant for a digital creature-collection game. 
+    Generate a unique, catchy species name and a short, flavorful description (max 2 sentences) for a ${rarity} rarity creature that is a ${typeString} type.
+    Return the result strictly as a JSON object with two keys: "name" and "description". Do not include markdown formatting.`;
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${env.GEMINI_API_KEY}`;
+    
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { 
+                responseMimeType: "application/json" // Forces Gemini to return pure JSON
+            }
+        })
+    });
+
+    if (!response.ok) {
+        const errText = await response.text();
+        console.error('Failed to generate AI text:', errText);
+        // Throw an error instead of returning a fallback
+        throw new Error("Failed to generate text from Gemini API"); 
+    }
+
+    const data = await response.json();
+    const textResponse = data.candidates[0].content.parts[0].text;
+    
+    try {
+        return JSON.parse(textResponse);
+    } catch (e) {
+        console.error("Failed to parse Gemini text response", textResponse);
+        // Throw an error instead of returning a fallback
+        throw new Error("Failed to parse JSON from Gemini text response"); 
+    }
+}
+
 async function generateAndSaveImage(prompt: string): Promise<string> {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${env.GEMINI_API_KEY}`;
     
@@ -42,13 +79,10 @@ async function generateAndSaveImage(prompt: string): Promise<string> {
     });
 
     if (!response.ok) {
-        // Add this line to see the real reason in your terminal
         const errorData = await response.json().catch(() => ({}));
         console.error('Gemini API Error Details:', JSON.stringify(errorData, null, 2));
         throw new Error(`Failed to generate AI image: ${response.statusText}`); 
     }
-
-    if (!response.ok) throw new Error('Failed to generate AI image'); 
 
     const data = await response.json();
     const base64Data = data.candidates[0].content.parts[0].inlineData.data;
@@ -81,13 +115,15 @@ async function createCreatureData(isDual: boolean) {
         prompt = `A cute, cartoon style digital art of a ${types[0]} type creature. It features a ${aura} ${types[0]}-related background. No words on the image and make it a square image with no border.`;
     }
 
-    const imageUrl = await generateAndSaveImage(prompt);
+    const [imageUrl, textData] = await Promise.all([
+        generateAndSaveImage(prompt),
+        generateCreatureText(types, finalRarity)
+    ]);
 
     return {
         id: randomUUID(),
-        // Using faker for the name, stored in speciesName
-        speciesName: faker.person.firstName(), 
-        description: faker.commerce.productDescription(),
+        speciesName: textData.name, 
+        description: textData.description,
         imageUrl,
         rarity: finalRarity,
         type1: types[0],
