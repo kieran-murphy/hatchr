@@ -3,12 +3,17 @@ import { creatureQueue, dualCreatureQueue } from '$lib/server/db/schema';
 import { TYPE_RARITY_MAP, rarityWeight, type Rarity } from '$lib/server/game';
 import { env } from '$env/dynamic/private';
 import { count } from 'drizzle-orm';
-import fs from 'node:fs';
-import path from 'node:path';
+// import fs from 'node:fs';
+// import path from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { UTApi } from "uploadthing/server";
 
 const AVAILABLE_TYPES = Object.keys(TYPE_RARITY_MAP);
 const QUEUE_TARGET = 10;
+
+const utapi = new UTApi({
+    token: env.UPLOADTHING_TOKEN
+});
 
 let isGeneratingSingle = false;
 let isGeneratingDual = false;
@@ -111,15 +116,19 @@ async function generateAndSaveImage(prompt: string): Promise<string> {
     const base64Data = data.candidates[0].content.parts[0].inlineData.data;
     const buffer = Buffer.from(base64Data, 'base64');
 
-    const fileName = `${randomUUID()}.png`;
-    const uploadDir = path.join(process.cwd(), 'static', 'uploads', 'creatures');
-    
-    if (!fs.existsSync(uploadDir)) {
-        fs.mkdirSync(uploadDir, { recursive: true });
+    // Convert buffer to a File object for UploadThing
+    const blob = new Blob([buffer], { type: 'image/png' });
+    const file = new File([blob], `${randomUUID()}.png`, { type: 'image/png' });
+
+    // Upload to UploadThing
+    const uploadResponse = await utapi.uploadFiles(file);
+
+    if (uploadResponse.error) {
+        throw new Error(`UploadThing Error: ${uploadResponse.error.message}`);
     }
 
-    fs.writeFileSync(path.join(uploadDir, fileName), buffer);
-    return `/uploads/creatures/${fileName}`;
+    // Return the persistent, public URL provided by UploadThing
+    return uploadResponse.data.url;
 }
 
 async function createCreatureData(isDual: boolean) {

@@ -57,6 +57,8 @@
 	},
 	"dependencies": {
 		"@faker-js/faker": "^10.4.0",
-		"@lucide/svelte": "^1.17.0"
+		"@lucide/svelte": "^1.17.0",
+		"@uploadthing/svelte": "^7.3.3",
+		"uploadthing": "^7.7.4"
 	}
 }
