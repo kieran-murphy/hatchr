@@ -2,7 +2,7 @@
     import { flip } from 'svelte/animate';
     import { quintOut } from 'svelte/easing';
     import { scale } from 'svelte/transition';
-    import { ListFilter, Shuffle } from '@lucide/svelte';
+    import { ListFilter } from '@lucide/svelte';
     import { resolve } from '$app/paths';
 
     let { data } = $props();
@@ -33,12 +33,14 @@
         'Water': { text: 'text-blue-500', dot: 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)]' }
     };
 
-    let visibleCreatures = $derived(data.creatures);
-    let isLoading = $derived(false);
-    let hasMore = $derived(data.creatures.length === 20);
+    let visibleCreatures = $state(data.creatures);
+    let isLoading = $state(false);
+    let hasMore = $state(data.creatures.length === 20);
     let sortBy = $state('recent');
     let filterType = $state('All');
     let isTypeMenuOpen = $state(false);
+    let isSortMenuOpen = $state(false);
+    let showDuplicates = $state(false);
 
     const rarityWeight = {
         'LEGENDARY': 4,
@@ -65,13 +67,9 @@
         return list; 
     });
 
-    async function applyTypeFilter(newType: string) {
-        if (filterType === newType) return;
-        
-        filterType = newType;
+    async function reloadCollection() {
         isLoading = true;
-        
-        const res = await fetch(`/api/collection?offset=0&type=${filterType}`);
+        const res = await fetch(`/api/collection?offset=0&type=${filterType}&duplicates=${showDuplicates}`);
         const result = await res.json();
         
         visibleCreatures = result.creatures || [];
@@ -79,11 +77,23 @@
         isLoading = false;
     }
 
+    async function applyTypeFilter(newType: string) {
+        if (filterType === newType) return;
+        filterType = newType;
+        showDuplicates = false;
+        await reloadCollection();
+    }
+
+    async function toggleDuplicates() {
+        showDuplicates = !showDuplicates;
+        await reloadCollection();
+    }
+
     async function loadMore() {
         if (isLoading || !hasMore) return;
         isLoading = true;
 
-        const res = await fetch(`/api/collection?offset=${visibleCreatures.length}&type=${filterType}`);
+        const res = await fetch(`/api/collection?offset=${visibleCreatures.length}&type=${filterType}&duplicates=${showDuplicates}`);
         const result = await res.json();
 
         if (result.creatures && result.creatures.length > 0) {
@@ -115,21 +125,59 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-4">
-            <div class="flex items-center gap-2 p-1 bg-white/5 border border-white/5 rounded-2xl w-full md:w-fit overflow-x-auto custom-scrollbar">
-                <div class="px-3 text-slate-500 shrink-0">
-                    <ListFilter size={16} />
-                </div>
-                
-                {#each ['recent', 'rarity', 'alphabetical'] as option (option)}
-                    <button 
-                        onclick={() => sortBy = option}
-                        class="shrink-0 whitespace-nowrap px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all
-                        {sortBy === option ? 'bg-white text-black' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
-                    >
-                        {option}
-                    </button>
-                {/each}
+            
+            <div class="relative w-full md:w-auto">
+                <button 
+                    onclick={() => isSortMenuOpen = !isSortMenuOpen}
+                    class="w-full md:w-auto flex items-center justify-between gap-3 bg-white/5 border border-white/5 rounded-2xl px-5 py-3 hover:bg-white/10 transition-colors cursor-pointer"
+                >
+                    <div class="flex items-center gap-3 text-white">
+                        <ListFilter size={16} class="text-slate-500" />
+                        <span class="text-[10px] font-black uppercase tracking-widest">
+                            Sort: {sortBy}
+                        </span>
+                    </div>
+                    <svg class="h-3 w-3 text-slate-500 transition-transform {isSortMenuOpen ? 'rotate-180' : ''}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/>
+                    </svg>
+                </button>
 
+                {#if isSortMenuOpen}
+                    <button 
+                        class="fixed inset-0 w-full h-full z-40 cursor-default" 
+                        onclick={() => isSortMenuOpen = false}
+                        aria-label="Close sort menu"
+                    ></button>
+                    
+                    <div 
+                        in:scale={{ duration: 150, start: 0.95 }}
+                        class="absolute left-0 mt-2 w-full md:w-48 max-h-80 overflow-y-auto bg-[#0A0A0A]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-2 z-50 flex flex-col shadow-2xl custom-scrollbar"
+                    >
+                        <div class="px-4 py-2 text-[8px] font-black text-slate-500 uppercase tracking-widest">Sort By</div>
+                        {#each ['recent', 'rarity', 'alphabetical'] as option (option)}
+                            <button 
+                                onclick={() => { sortBy = option; isSortMenuOpen = false; }}
+                                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-white/5 w-full text-left {sortBy === option ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white'}"
+                            >
+                                <span class="text-[10px] font-black uppercase tracking-widest">
+                                    {option}
+                                </span>
+                            </button>
+                        {/each}
+
+                        <div class="w-full h-px bg-white/10 my-2 shrink-0"></div>
+                        <div class="px-4 py-2 text-[8px] font-black text-slate-500 uppercase tracking-widest">Filters</div>
+                        
+                        <button 
+                            onclick={() => { toggleDuplicates(); isSortMenuOpen = false; }}
+                            class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-white/5 w-full text-left {showDuplicates ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white'}"
+                        >
+                            <span class="text-[10px] font-black uppercase tracking-widest">
+                                Duplicates {showDuplicates ? '(On)' : ''}
+                            </span>
+                        </button>
+                    </div>
+                {/if}
             </div>
 
             <div class="relative w-full md:w-auto">
@@ -175,9 +223,12 @@
             </div>
         </div>
     </header>
+    
     {#if sortedCreatures.length === 0}
         <div class="rounded-[2.5rem] border border-white/5 bg-[#0A0A0A]/60 backdrop-blur-xl py-32 text-center">
-            {#if filterType !== 'All'}
+            {#if showDuplicates}
+                <p class="mb-6 text-gray-500 font-medium">No identical types found in your collection.</p>
+            {:else if filterType !== 'All'}
                 <p class="mb-6 text-gray-500 font-medium">No <span class={typeStyles[filterType].text}>{filterType}</span>-type creatures found in your collection.</p>
             {:else}
                 <p class="mb-6 text-gray-500 font-medium">Your collection is empty.</p>
