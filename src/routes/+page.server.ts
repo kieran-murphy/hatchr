@@ -12,7 +12,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     const typeFilter = url.searchParams.get('type');
     const showDuplicates = url.searchParams.get('duplicates') === 'true';
     
-=    const conditions = [eq(creatures.userId, locals.user.id)];
+    const conditions = [eq(creatures.userId, locals.user.id)];
 
     if (typeFilter && typeFilter !== 'All') {
         conditions.push(
