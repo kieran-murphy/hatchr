@@ -77,7 +77,6 @@ async function generateCreatureText(types: string[], rarity: string): Promise<{ 
     if (!response.ok) {
         const errText = await response.text();
         console.error('Failed to generate AI text:', errText);
-        // Throw an error instead of returning a fallback
         throw new Error("Failed to generate text from Gemini API"); 
     }
 
@@ -88,12 +87,11 @@ async function generateCreatureText(types: string[], rarity: string): Promise<{ 
         return JSON.parse(textResponse);
     } catch (e) {
         console.error("Failed to parse Gemini text response", textResponse);
-        // Throw an error instead of returning a fallback
         throw new Error("Failed to parse JSON from Gemini text response"); 
     }
 }
 
-async function generateAndSaveImage(prompt: string): Promise<string> {
+async function generateAndSaveImage(prompt: string, types: string[]): Promise<string> {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=${env.GEMINI_API_KEY}`;
     
     const response = await fetch(url, {
@@ -116,9 +114,15 @@ async function generateAndSaveImage(prompt: string): Promise<string> {
     const base64Data = data.candidates[0].content.parts[0].inlineData.data;
     const buffer = Buffer.from(base64Data, 'base64');
 
-    // Convert buffer to a File object for UploadThing
+    const typeString = types.join('__');
+    
+    // Construct the custom file name with the Types and a secure UUID
+    const customFileName = `${typeString}-${randomUUID()}.png`;
+    console.log("customFileName === ", customFileName)
+
+    // Convert buffer to a File object with your custom name
     const blob = new Blob([buffer], { type: 'image/png' });
-    const file = new File([blob], `${randomUUID()}.png`, { type: 'image/png' });
+    const file = new File([blob], customFileName, { type: 'image/png' });
 
     // Upload to UploadThing
     const uploadResponse = await utapi.uploadFiles(file);
@@ -148,7 +152,7 @@ async function createCreatureData(isDual: boolean) {
     }
 
     const [imageUrl, textData] = await Promise.all([
-        generateAndSaveImage(prompt),
+        generateAndSaveImage(prompt, types), // Pass the selected types into the image function
         generateCreatureText(types, finalRarity)
     ]);
 
