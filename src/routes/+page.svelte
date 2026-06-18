@@ -258,9 +258,28 @@
                         </div>
 
                         <div class="space-y-2">
-                            <span class="inline-block rounded border px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter {rarityColors[creature.rarity]}">
-                                {creature.rarity}
-                            </span>
+                            <div class="flex flex-col items-start gap-1.5">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    {#if creature.type1 && typeStyles[creature.type1]}
+                                        <span class="inline-flex items-center gap-1.5 rounded border border-white/5 bg-white/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter {typeStyles[creature.type1].text}">
+                                            <span class="w-1.5 h-1.5 rounded-full {typeStyles[creature.type1].dot}"></span>
+                                            {creature.type1}
+                                        </span>
+                                    {/if}
+
+                                    {#if creature.type2 && typeStyles[creature.type2]}
+                                        <span class="inline-flex items-center gap-1.5 rounded border border-white/5 bg-white/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter {typeStyles[creature.type2].text}">
+                                            <span class="w-1.5 h-1.5 rounded-full {typeStyles[creature.type2].dot}"></span>
+                                            {creature.type2}
+                                        </span>
+                                    {/if}
+                                </div>
+                                
+                                <span class="inline-block rounded border px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter {rarityColors[creature.rarity]}">
+                                    {creature.rarity}
+                                </span>
+                            </div>
+                            
                             <h3 class="text-lg leading-tight font-black italic tracking-tighter text-white uppercase group-hover:text-blue-400 transition-colors">
                                 {creature.speciesName}
                             </h3>
