@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { user as userTable, creatures, creatureQueue, dualCreatureQueue } from '$lib/server/db/schema';
-import { eq, sql, asc } from 'drizzle-orm';
+import { eq, sql, asc, and, or, isNull } from 'drizzle-orm'; // <-- Added and, or, isNull
 import { fail, redirect } from '@sveltejs/kit';
 import { maintainCreatureQueue, maintainDualCreatureQueue } from '$lib/server/generation';
 
@@ -51,27 +51,52 @@ export const actions = {
 
                 await tx.delete(targetQueue).where(eq(targetQueue.id, queuedCreature.id));
 
+                const newT1 = queuedCreature.type1;
+                const newT2 = 'type2' in queuedCreature ? queuedCreature.type2 : null;
+
+                let existingCombo;
+                if (newT2) {
+                    existingCombo = await tx.select().from(creatures).where(
+                        and(
+                            eq(creatures.userId, user.id),
+                            or(
+                                and(eq(creatures.type1, newT1), eq(creatures.type2, newT2)),
+                                and(eq(creatures.type1, newT2), eq(creatures.type2, newT1))
+                            )
+                        )
+                    ).limit(1);
+                } else {
+                    existingCombo = await tx.select().from(creatures).where(
+                        and(
+                            eq(creatures.userId, user.id),
+                            eq(creatures.type1, newT1),
+                            isNull(creatures.type2)
+                        )
+                    ).limit(1);
+                }
+                
+                const isNewCombo = existingCombo.length === 0;
+
                 const [newCreature] = await tx.insert(creatures).values({
                     userId: user.id,
                     speciesName: queuedCreature.speciesName,
                     description: queuedCreature.description,
                     rarity: queuedCreature.rarity,
                     imageUrl: queuedCreature.imageUrl,
-                    type1: queuedCreature.type1,
-                    type2: 'type2' in queuedCreature ? queuedCreature.type2 : null
+                    type1: newT1,
+                    type2: newT2
                 }).returning();
 
-                return newCreature;
+                return { creature: newCreature, isNewCombo };
             });
 
-            // Trigger background refill for the specific queue
             if (isDual) {
                 Promise.resolve().then(() => maintainDualCreatureQueue()).catch(console.error);
             } else {
                 Promise.resolve().then(() => maintainCreatureQueue()).catch(console.error);
             }
 
-            return { success: true, creature: result };
+            return { success: true, creature: result.creature, isNewCombo: result.isNewCombo };
         } catch (error) {
             console.error(error);
             return fail(500, { message: "The egg refused to crack. Try again later!" });

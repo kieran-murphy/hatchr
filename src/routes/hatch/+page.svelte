@@ -38,14 +38,14 @@
         <button 
             onclick={() => isDual = false}
             disabled={hatching}
-            class="px-6 py-3 rounded-xl font-black text-xs uppercase transition-all {!isDual ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-white'}"
+            class="cursor-pointer px-6 py-3 rounded-xl font-black text-xs uppercase transition-all {!isDual ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)]' : 'text-gray-500 hover:text-white'}"
         >
             Single (100 💎)
         </button>
         <button 
             onclick={() => isDual = true}
             disabled={hatching}
-            class="px-6 py-3 rounded-xl font-black text-xs uppercase transition-all {isDual ? 'bg-purple-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.3)]' : 'text-gray-500 hover:text-white'}"
+            class="cursor-pointer px-6 py-3 rounded-xl font-black text-xs uppercase transition-all {isDual ? 'bg-gradient-to-r from-blue-600 to-red-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.4)]' : 'text-gray-500 hover:text-white'}"
         >
             Dual (200 💎)
         </button>
@@ -69,6 +69,15 @@
                         alt="New Creature" 
                         class="relative z-10 w-56 h-56 object-cover rounded-3xl bg-black/80 border-2 border-white/10 p-2 transition-transform duration-500 hover:scale-105"
                     />
+
+                    {#if form.isNewCombo}
+                        <div class="absolute -top-4 -right-4 z-30 flex items-center justify-center overflow-hidden rounded-full border-2 border-white/90 bg-slate-600 px-4 py-1 text-sm font-black tracking-widest text-white shadow-[0_0_20px_rgba(220,38,38,0.8)] rotate-12">
+                            <span class="relative z-10 drop-shadow-md">NEW!</span>
+                            
+                            <div class="absolute top-0 left-0 h-full w-8 -translate-x-[200%] -skew-x-[30deg] bg-gradient-to-r from-transparent via-white/80 to-transparent blur-[1px] animate-shine"></div>
+                        </div>
+                    {/if}
+
                     <div class="absolute z-20 -bottom-4 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-lg bg-[#0A0A0A] border border-white/20 shadow-xl flex items-center gap-2">
                         <span class="text-[11px] font-black uppercase tracking-tighter {rarityStyles[form.creature.rarity].split(' ')[0]}">
                             {form.creature.rarity}
@@ -115,7 +124,7 @@
         <input type="hidden" name="isDual" value={isDual.toString()} />
         <button 
             disabled={hatching || data.userGems < (isDual ? 200 : 100)}
-            class="group relative px-14 py-5 {isDual ? 'bg-purple-600 shadow-[0_0_20px_rgba(147,51,234,0.4)]' : 'bg-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.4)]'} rounded-2xl font-black text-2xl overflow-hidden transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:grayscale cursor-pointer"
+            class="group relative px-14 py-5 {isDual ? 'bg-gradient-to-r from-blue-600 to-red-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.4)]' : 'bg-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.4)]'} rounded-2xl font-black text-2xl overflow-hidden transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:grayscale cursor-pointer"
         >
             <span class="relative z-10 flex items-center gap-3 text-white">
                 {#if hatching}
@@ -171,6 +180,27 @@
             border-style: solid;
             box-shadow: 0 0 10px currentColor, inset 0 0 10px currentColor;
         }
+    }
+
+    @keyframes foil-shine {
+        0% { 
+            transform: translateX(-200%) skewX(-30deg); 
+            opacity: 0; 
+        }
+        10% { 
+            opacity: 1; 
+        }
+        80% { 
+            opacity: 1; 
+        }
+        100% { 
+            transform: translateX(400%) skewX(-30deg); 
+            opacity: 0; 
+        }
+    }
+
+    .animate-shine {
+        animation: foil-shine 2s ease-in-out infinite;
     }
 
     .animate-crack {
