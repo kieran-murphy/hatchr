@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { creatureQueue, dualCreatureQueue } from '$lib/server/db/schema';
-import { TYPE_RARITY_MAP, rarityWeight, type Rarity } from '$lib/server/game';
+import { TYPE_RARITY_MAP, rarityWeight, type Rarity } from '$lib/game';
 import { env } from '$env/dynamic/private';
 import { count } from 'drizzle-orm';
 // import fs from 'node:fs';

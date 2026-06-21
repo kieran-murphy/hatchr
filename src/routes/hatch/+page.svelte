@@ -3,13 +3,14 @@
     import { scale, fade } from 'svelte/transition';
     import { elasticOut } from 'svelte/easing';
     import { resolve } from '$app/paths';
+    import { typeStyles } from '$lib/game'; // Make sure this path matches where you put the dictionary!
     
     let { data, form } = $props();
     
     let hatching = $state(false);
     let isDual = $state(false);
 
-    const rarityStyles = {
+    const rarityStyles: Record<string, string> = {
         COMMON: 'text-gray-400 border-gray-400/20 bg-gray-400/5 shadow-[0_0_20px_rgba(156,163,175,0.1)]',
         UNCOMMON: 'text-emerald-400 border-emerald-400/20 bg-emerald-400/5 shadow-[0_0_35px_rgba(52,211,153,0.3)]',
         RARE: 'text-blue-400 border-blue-400/20 bg-blue-400/5 shadow-[0_0_50px_rgba(37,99,235,0.5)]',
@@ -85,13 +86,20 @@
                     </div>
                 </div>
 
-                <div class="text-center mt-2 space-y-2 z-10 relative">
+                <div class="text-center mt-2 space-y-3 z-10 relative">
                     <h2 class="text-4xl font-black text-white uppercase italic tracking-tighter drop-shadow-lg">{form.creature.speciesName}</h2>
                     
                     <div class="flex justify-center gap-2">
-                        <span class="px-2 py-1 bg-white/10 rounded text-[10px] font-bold text-gray-300 uppercase tracking-wider">{form.creature.type1}</span>
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md {typeStyles[form.creature.type1]?.text || 'text-gray-300'}">
+                            <div class="w-1.5 h-1.5 rounded-full {typeStyles[form.creature.type1]?.dot || 'bg-gray-400'}"></div>
+                            {form.creature.type1}
+                        </span>
+                        
                         {#if form.creature.type2}
-                            <span class="px-2 py-1 bg-white/10 rounded text-[10px] font-bold text-gray-300 uppercase tracking-wider">{form.creature.type2}</span>
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md {typeStyles[form.creature.type2]?.text || 'text-gray-300'}">
+                                <div class="w-1.5 h-1.5 rounded-full {typeStyles[form.creature.type2]?.dot || 'bg-gray-400'}"></div>
+                                {form.creature.type2}
+                            </span>
                         {/if}
                     </div>
 
