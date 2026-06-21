@@ -15,7 +15,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     const typeFilter = url.searchParams.get('type');
     const showDuplicates = url.searchParams.get('duplicates') === 'true';
 
-    let conditions = [eq(creatures.userId, locals.user.id)];
+    const queryUserId = url.searchParams.get('userId');
+    const targetUserId = queryUserId ? queryUserId : locals.user.id;
+
+    let conditions = [eq(creatures.userId, targetUserId)];
 
     if (typeFilter && typeFilter !== 'All') {
         conditions.push(
@@ -31,7 +34,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
         
         const duplicatesSubquery = db.select({ combo: typeCombo })
             .from(creatures)
-            .where(eq(creatures.userId, locals.user.id))
+            .where(eq(creatures.userId, targetUserId))
             .groupBy(typeCombo)
             .having(sql`count(*) > 1`);
 

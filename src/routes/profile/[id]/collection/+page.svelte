@@ -2,7 +2,7 @@
     import { flip } from 'svelte/animate';
     import { quintOut } from 'svelte/easing';
     import { scale } from 'svelte/transition';
-    import { ListFilter, ArrowLeft } from '@lucide/svelte';
+    import { ListFilter, ArrowLeft, Loader2 } from '@lucide/svelte';
     import { resolve } from '$app/paths';
 
     let { data } = $props();
@@ -15,6 +15,10 @@
     };
 
     let sortBy = $state('recent');
+    
+    let loadedCreatures = $state(data.creatures);
+    let isLoadingMore = $state(false);
+    let hasMore = $state(data.creatures.length === 20);
 
     const rarityWeight = {
         'LEGENDARY': 4,
@@ -24,7 +28,7 @@
     };
 
     let sortedCreatures = $derived.by(() => {
-        let list = [...data.creatures];
+        let list = [...loadedCreatures];
 
         if (sortBy === 'rarity') {
             return list.sort((a, b) => rarityWeight[b.rarity] - rarityWeight[a.rarity]);
@@ -40,6 +44,29 @@
 
         return list; 
     });
+
+    async function loadMore() {
+        if (isLoadingMore || !hasMore) return;
+        isLoadingMore = true;
+
+        try {
+            const res = await fetch(`/api/collection?userId=${data.profileUser.id}&offset=${loadedCreatures.length}`);
+            if (res.ok) {
+                
+                const { creatures: newBatch } = await res.json();
+                
+                loadedCreatures = [...loadedCreatures, ...newBatch];
+                
+                if (newBatch.length < 20) {
+                    hasMore = false;
+                }
+            }
+        } catch (error) {
+            console.error("Failed to load more creatures:", error);
+        } finally {
+            isLoadingMore = false;
+        }
+    }
 </script>
 
 <div class="mx-auto max-w-7xl p-6 md:p-12">
@@ -50,7 +77,7 @@
                     {data.profileUser.name}'s Collection
                 </h1>
                 <p class="font-bold text-blue-500 uppercase text-[10px] tracking-widest mt-1">
-                    {data.creatures.length} Creatures
+                    {loadedCreatures.length} Creatures
                 </p>
             </div>
             
@@ -84,7 +111,7 @@
             <p class="mb-6 text-gray-500 font-medium">This trainer hasn't hatched any creatures yet.</p>
         </div>
     {:else}
-        <div class="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div class="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 mb-12">
             {#each sortedCreatures as creature (creature.id)}
                 <div 
                     animate:flip={{ duration: 600, easing: quintOut }}
@@ -115,12 +142,29 @@
                 </div>
             {/each}
         </div>
+
+        {#if hasMore}
+            <div class="flex justify-center mt-8 pb-12">
+                <button 
+                    onclick={loadMore}
+                    disabled={isLoadingMore}
+                    class="group relative flex items-center justify-center gap-2 overflow-hidden rounded-2xl bg-white/5 border border-white/10 px-8 py-4 font-black uppercase italic tracking-widest text-white transition-all hover:scale-[1.02] hover:bg-white/10 hover:border-blue-500/50 hover:shadow-[0_0_30px_rgba(59,130,246,0.15)] disabled:opacity-50 disabled:hover:scale-100 disabled:hover:bg-white/5 disabled:hover:border-white/10 disabled:hover:shadow-none w-full sm:w-auto min-w-[240px]"
+                >
+                    {#if isLoadingMore}
+                        <Loader2 size={18} class="animate-spin text-blue-500" />
+                        <span class="text-slate-300">Summoning...</span>
+                    {:else}
+                        Load More
+                    {/if}
+                </button>
+            </div>
+        {/if}
     {/if}
 </div>
 
 <style>
     .custom-scrollbar::-webkit-scrollbar {
-        height: 4px; /* Specifically for the horizontal scrollbar */
+        height: 4px;
         width: 4px;
     }
     .custom-scrollbar::-webkit-scrollbar-track {

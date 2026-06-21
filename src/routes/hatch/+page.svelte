@@ -3,7 +3,7 @@
     import { scale, fade } from 'svelte/transition';
     import { elasticOut } from 'svelte/easing';
     import { resolve } from '$app/paths';
-    import { typeStyles } from '$lib/game'; // Make sure this path matches where you put the dictionary!
+    import { typeStyles } from '$lib/game'; 
     
     let { data, form } = $props();
     
@@ -27,7 +27,7 @@
     };
 </script>
 
-<div class="flex flex-col items-center justify-center min-h-[80vh] gap-8 p-6">
+<div class="flex flex-col items-center justify-center min-h-[80vh] gap-8 p-6 w-full max-w-[100vw] overflow-x-hidden">
     <div class="flex flex-col items-center gap-4">
         <div class="px-5 py-2 bg-white/5 border border-white/10 rounded-full flex items-center gap-3">
             <span class="text-[10px] font-black text-blue-400 uppercase tracking-widest">Balance</span>
@@ -86,8 +86,10 @@
                     </div>
                 </div>
 
-                <div class="text-center mt-2 space-y-3 z-10 relative">
-                    <h2 class="text-4xl font-black text-white uppercase italic tracking-tighter drop-shadow-lg">{form.creature.speciesName}</h2>
+                <div class="text-center mt-2 space-y-3 z-10 relative px-4 w-full max-w-sm">
+                    <h2 class="text-3xl sm:text-4xl font-black text-white uppercase italic tracking-tighter drop-shadow-lg break-words">
+                        {form.creature.speciesName}
+                    </h2>
                     
                     <div class="flex justify-center gap-2">
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md {typeStyles[form.creature.type1]?.text || 'text-gray-300'}">

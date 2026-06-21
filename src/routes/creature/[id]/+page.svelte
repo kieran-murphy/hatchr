@@ -8,6 +8,8 @@
     let { data, form } = $props();
     let creature = $derived(data.creature);
     
+    let isOwner = $derived(data.isOwner ?? (data.user?.id === creature?.userId));
+    
     let releaseReward = $derived(creature?.type2 ? 100 : 50);
 
     const rarityColors = {
@@ -67,15 +69,17 @@
                         {/if}
                     </div>
 
-                    <form method="POST" action="?/toggleFavorite" use:enhance>
-                        <input type="hidden" name="isFavorite" value={creature.isFavorite} />
-                        <button 
-                            type="submit"
-                            class="p-4 rounded-2xl border transition-all active:scale-90 cursor-pointer {creature.isFavorite ? 'bg-yellow-400/10 border-yellow-400/50 text-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.2)]' : 'bg-white/5 border-white/10 text-slate-500 hover:text-white'}"
-                        >
-                            <Star size={24} fill={creature.isFavorite ? "currentColor" : "none"} />
-                        </button>
-                    </form>
+                    {#if isOwner}
+                        <form method="POST" action="?/toggleFavorite" use:enhance>
+                            <input type="hidden" name="isFavorite" value={creature.isFavorite} />
+                            <button 
+                                type="submit"
+                                class="p-4 rounded-2xl border transition-all active:scale-90 cursor-pointer {creature.isFavorite ? 'bg-yellow-400/10 border-yellow-400/50 text-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.2)]' : 'bg-white/5 border-white/10 text-slate-500 hover:text-white'}"
+                            >
+                                <Star size={24} fill={creature.isFavorite ? "currentColor" : "none"} />
+                            </button>
+                        </form>
+                    {/if}
                 </div>
 
                 <div class="grid grid-cols-1 gap-4">
@@ -131,27 +135,29 @@
                     </div>
                 </div>
 
-                <div class="pt-6 border-t border-white/5">
-                    <form 
-                        method="POST" 
-                        action="?/release" 
-                        use:enhance={({ cancel }) => {
-                            const confirmed = confirm(`Are you sure? This creature will return to the wild for ${releaseReward} Gems.`);
-                            if (!confirmed) {
-                                cancel();
-                                return;
-                            };
-                            
-                            return async ({ update }) => {
-                                await update();
-                            };
-                        }}
-                    >
-                        <button class="w-full py-4 bg-red-500/5 border border-red-500/20 text-red-500 font-black uppercase tracking-widest rounded-2xl hover:bg-red-500 hover:text-white transition-all active:scale-95 cursor-pointer">
-                            Release to Wild (+{releaseReward} 💎)
-                        </button>
-                    </form>
-                </div>
+                {#if isOwner}
+                    <div class="pt-6 border-t border-white/5">
+                        <form 
+                            method="POST" 
+                            action="?/release" 
+                            use:enhance={({ cancel }) => {
+                                const confirmed = confirm(`Are you sure? This creature will return to the wild for ${releaseReward} Gems.`);
+                                if (!confirmed) {
+                                    cancel();
+                                    return;
+                                };
+                                
+                                return async ({ update }) => {
+                                    await update();
+                                };
+                            }}
+                        >
+                            <button class="w-full py-4 bg-red-500/5 border border-red-500/20 text-red-500 font-black uppercase tracking-widest rounded-2xl hover:bg-red-500 hover:text-white transition-all active:scale-95 cursor-pointer">
+                                Release to Wild (+{releaseReward} 💎)
+                            </button>
+                        </form>
+                    </div>
+                {/if}
             </div>
         </div>
     </div>
