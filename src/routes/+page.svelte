@@ -26,39 +26,21 @@
     let isSortMenuOpen = $state(false);
     let showDuplicates = $state(false);
 
-    const rarityWeight = {
-        'LEGENDARY': 4,
-        'RARE': 3,
-        'UNCOMMON': 2,
-        'COMMON': 1
-    };
-
-    let sortedCreatures = $derived.by(() => {
-        let list = [...visibleCreatures];
-
-        if (sortBy === 'rarity') {
-            return list.sort((a, b) => rarityWeight[b.rarity] - rarityWeight[a.rarity]);
-        }
-        
-        if (sortBy === 'alphabetical') {
-            return list.sort((a, b) => a.speciesName.localeCompare(b.speciesName));
-        }
-
-        if (sortBy === 'type') {
-            return list.sort((a, b) => (a.speciesName || '').localeCompare(b.speciesName || ''));
-        }
-
-        return list; 
-    });
-
     async function reloadCollection() {
         isLoading = true;
-        const res = await fetch(`/api/collection?offset=0&type=${filterType}&duplicates=${showDuplicates}`);
+        const res = await fetch(`/api/collection?offset=0&type=${filterType}&duplicates=${showDuplicates}&sort=${sortBy}`);
         const result = await res.json();
         
         visibleCreatures = result.creatures || [];
         hasMore = visibleCreatures.length === 20;
         isLoading = false;
+    }
+
+    async function applySort(newSort: string) {
+        if (sortBy === newSort) return;
+        sortBy = newSort;
+        isSortMenuOpen = false;
+        await reloadCollection();
     }
 
     async function applyTypeFilter(newType: string) {
@@ -77,7 +59,7 @@
         if (isLoading || !hasMore) return;
         isLoading = true;
 
-        const res = await fetch(`/api/collection?offset=${visibleCreatures.length}&type=${filterType}&duplicates=${showDuplicates}`);
+        const res = await fetch(`/api/collection?offset=${visibleCreatures.length}&type=${filterType}&duplicates=${showDuplicates}&sort=${sortBy}`);
         const result = await res.json();
 
         if (result.creatures && result.creatures.length > 0) {
@@ -140,7 +122,7 @@
                         <div class="px-4 py-2 text-[8px] font-black text-slate-500 uppercase tracking-widest">Sort By</div>
                         {#each ['recent', 'rarity', 'alphabetical'] as option (option)}
                             <button 
-                                onclick={() => { sortBy = option; isSortMenuOpen = false; }}
+                                onclick={() => applySort(option)}
                                 class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-white/5 w-full text-left {sortBy === option ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white'}"
                             >
                                 <span class="text-[10px] font-black uppercase tracking-widest">
@@ -194,12 +176,20 @@
                         {#each AVAILABLE_TYPES as type (type)}
                             <button 
                                 onclick={() => { applyTypeFilter(type); isTypeMenuOpen = false; }}
-                                class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-white/5 w-full text-left {filterType === type ? 'bg-white/10' : ''}"
+                                class="flex items-center justify-between px-4 py-3 rounded-xl transition-all hover:bg-white/5 w-full text-left {filterType === type ? 'bg-white/10' : ''}"
                             >
-                                <div class="w-2.5 h-2.5 rounded-full {typeStyles[type].dot}"></div>
-                                <span class="text-[10px] font-black uppercase tracking-widest {typeStyles[type].text}">
-                                    {type}
-                                </span>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-2.5 h-2.5 rounded-full {typeStyles[type].dot}"></div>
+                                    <span class="text-[10px] font-black uppercase tracking-widest {typeStyles[type].text}">
+                                        {type}
+                                    </span>
+                                </div>
+                                
+                                {#if data.typeCounts && data.typeCounts[type] !== undefined}
+                                    <span class="text-[9px] font-black text-slate-500 bg-white/5 border border-white/5 px-2 py-0.5 rounded-md">
+                                        {data.typeCounts[type]}
+                                    </span>
+                                {/if}
                             </button>
                         {/each}
                     </div>
@@ -208,7 +198,7 @@
         </div>
     </header>
     
-    {#if sortedCreatures.length === 0}
+    {#if visibleCreatures.length === 0}
         <div class="rounded-[2.5rem] border border-white/5 bg-[#0A0A0A]/60 backdrop-blur-xl py-32 text-center">
             {#if showDuplicates}
                 <p class="mb-6 text-gray-500 font-medium">No identical types found in your collection.</p>
@@ -223,7 +213,7 @@
         </div>
     {:else}
         <div class="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {#each sortedCreatures as creature (creature.id)}
+            {#each visibleCreatures as creature (creature.id)}
                 <div 
                     animate:flip={{ duration: 600, easing: quintOut }}
                     in:scale={{ duration: 300, start: 0.9 }}

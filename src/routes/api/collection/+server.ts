@@ -1,7 +1,7 @@
-import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
 import { creatures } from '$lib/server/db/schema';
-import { eq, desc, and, or, sql, inArray } from 'drizzle-orm';
+import { eq, desc, asc, and, or, sql, inArray } from 'drizzle-orm';
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async ({ url, locals }) => {
@@ -9,16 +9,15 @@ export const GET: RequestHandler = async ({ url, locals }) => {
         return json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const offsetParam = url.searchParams.get('offset');
-    const currentOffset = offsetParam !== null ? parseInt(offsetParam, 10) : 20;
-    
-    const typeFilter = url.searchParams.get('type');
-    const showDuplicates = url.searchParams.get('duplicates') === 'true';
-
     const queryUserId = url.searchParams.get('userId');
     const targetUserId = queryUserId ? queryUserId : locals.user.id;
 
-    let conditions = [eq(creatures.userId, targetUserId)];
+    const offset = Number(url.searchParams.get('offset')) || 0;
+    const typeFilter = url.searchParams.get('type');
+    const showDuplicates = url.searchParams.get('duplicates') === 'true';
+    const sortBy = url.searchParams.get('sort') || 'recent';
+
+    const conditions = [eq(creatures.userId, targetUserId)];
 
     if (typeFilter && typeFilter !== 'All') {
         conditions.push(
@@ -41,12 +40,22 @@ export const GET: RequestHandler = async ({ url, locals }) => {
         conditions.push(inArray(typeCombo, duplicatesSubquery));
     }
 
-    const nextCreatures = await db.query.creatures.findMany({
+    let orderLogic = [desc(creatures.hatchedAt)];
+    if (sortBy === 'alphabetical') {
+        orderLogic = [asc(creatures.speciesName)];
+    } else if (sortBy === 'rarity') {
+        orderLogic = [
+            desc(sql`CASE ${creatures.rarity} WHEN 'LEGENDARY' THEN 4 WHEN 'RARE' THEN 3 WHEN 'UNCOMMON' THEN 2 WHEN 'COMMON' THEN 1 ELSE 0 END`),
+            desc(creatures.hatchedAt)
+        ];
+    }
+
+    const newBatch = await db.query.creatures.findMany({
         where: and(...conditions),
-        orderBy: [desc(creatures.hatchedAt)],
+        orderBy: orderLogic,
         limit: 20,
-        offset: currentOffset
+        offset: offset
     });
 
-    return json({ creatures: nextCreatures });
+    return json({ creatures: newBatch });
 };
