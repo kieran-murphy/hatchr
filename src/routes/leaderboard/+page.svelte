@@ -28,9 +28,31 @@
             Global Leaderboard
         </h1>
         <p class="font-bold text-blue-500 uppercase text-xs sm:text-sm tracking-widest mt-2">
-            Top Trainers by Creature Count
+            {#if data.currentSort === 'gems'}
+                Top Trainers by Gems
+            {:else if data.currentSort === 'total'}
+                Top Trainers by Creatures Collected
+            {:else}
+                Top Trainers by Unique Creature Types
+            {/if}
         </p>
     </header>
+
+    <div class="flex items-center justify-center gap-2 p-1 bg-white/5 border border-white/5 rounded-2xl w-fit mx-auto mb-8 overflow-x-auto whitespace-nowrap">
+        {#each [
+            { id: 'unique', label: 'Unique Types' }, 
+            { id: 'total', label: 'Total Creatures' }, 
+            { id: 'gems', label: 'Gems' }
+        ] as option (option.id)}
+            <a 
+                href="?sort=${option.id}"
+                data-sveltekit-replacestate
+                class="px-4 py-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all shrink-0 {data.currentSort === option.id ? 'bg-white text-black' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
+            >
+                {option.label}
+            </a>
+        {/each}
+    </div>
 
     <div class="bg-[#0A0A0A]/60 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
         {#if data.leaderboard && data.leaderboard.length > 0}
@@ -66,11 +88,23 @@
                                 </div>
                             </div>
                             
-                            <div class="text-emerald-400 font-black tracking-widest bg-emerald-500/10 border border-emerald-500/20 px-2 py-1.5 sm:px-4 sm:py-2 rounded-xl flex items-center gap-1 sm:gap-2 shrink-0">
-                                <span class="text-sm sm:text-base">{user.uniqueCount}</span>
-                                <span class="text-emerald-600/50 text-xs sm:text-sm hidden min-[380px]:inline">/ 105</span> 
-                                <span class="text-base sm:text-lg grayscale group-hover:grayscale-0 transition-all">🥚</span>
-                            </div>
+                            {#if data.currentSort === 'gems'}
+                                <div class="text-blue-400 font-black tracking-widest bg-blue-500/10 border border-blue-500/20 px-2 py-1.5 sm:px-4 sm:py-2 rounded-xl flex items-center gap-1 sm:gap-2 shrink-0">
+                                    <span class="text-sm sm:text-base">{user.gems || 0}</span>
+                                    <span class="text-base sm:text-lg grayscale group-hover:grayscale-0 transition-all">💎</span>
+                                </div>
+                            {:else if data.currentSort === 'total'}
+                                <div class="text-amber-400 font-black tracking-widest bg-amber-500/10 border border-amber-500/20 px-2 py-1.5 sm:px-4 sm:py-2 rounded-xl flex items-center gap-1 sm:gap-2 shrink-0">
+                                    <span class="text-sm sm:text-base">{user.totalCount}</span>
+                                    <span class="text-base sm:text-lg grayscale group-hover:grayscale-0 transition-all">🥚</span>
+                                </div>
+                            {:else}
+                                <div class="text-emerald-400 font-black tracking-widest bg-emerald-500/10 border border-emerald-500/20 px-2 py-1.5 sm:px-4 sm:py-2 rounded-xl flex items-center gap-1 sm:gap-2 shrink-0">
+                                    <span class="text-sm sm:text-base">{user.uniqueCount}</span>
+                                    <span class="text-emerald-600/50 text-xs sm:text-sm hidden min-[380px]:inline">/ 105</span> 
+                                    <span class="text-base sm:text-lg grayscale group-hover:grayscale-0 transition-all">✨</span>
+                                </div>
+                            {/if}
                         </a>
                     </li>
                 {/each}
