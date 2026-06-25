@@ -3,6 +3,22 @@
 
     let { data } = $props();
 
+    let sortBy = $state('unique');
+
+    let sortedLeaderboard = $derived.by(() => {
+        let list = [...(data.leaderboard || [])];
+        
+        if (sortBy === 'gems') {
+            return list.sort((a, b) => (b.gems || 0) - (a.gems || 0));
+        }
+        if (sortBy === 'total') {
+            return list.sort((a, b) => (b.totalCount || 0) - (a.totalCount || 0));
+        }
+        
+        // Default unique sort
+        return list.sort((a, b) => (b.uniqueCount || 0) - (a.uniqueCount || 0));
+    });
+
     function getRankStyles(index: number) {
         switch(index) {
             case 0: return 'border-yellow-400/50 shadow-[0_0_20px_rgba(250,204,21,0.2)] bg-yellow-400/5';
@@ -28,12 +44,12 @@
             Global Leaderboard
         </h1>
         <p class="font-bold text-blue-500 uppercase text-xs sm:text-sm tracking-widest mt-2">
-            {#if data.currentSort === 'gems'}
+            {#if sortBy === 'gems'}
                 Top Trainers by Gems
-            {:else if data.currentSort === 'total'}
-                Top Trainers by Creatures Collected
+            {:else if sortBy === 'total'}
+                Top Trainers by Total Creatures
             {:else}
-                Top Trainers by Unique Creature Types
+                Top Trainers by Unique Types
             {/if}
         </p>
     </header>
@@ -44,20 +60,19 @@
             { id: 'total', label: 'Total Creatures' }, 
             { id: 'gems', label: 'Gems' }
         ] as option (option.id)}
-            <a 
-                href="?sort=${option.id}"
-                data-sveltekit-replacestate
-                class="px-4 py-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all shrink-0 {data.currentSort === option.id ? 'bg-white text-black' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
+            <button 
+                onclick={() => sortBy = option.id}
+                class="px-4 py-2 rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-widest transition-all shrink-0 {sortBy === option.id ? 'bg-white text-black' : 'text-slate-400 hover:text-white hover:bg-white/5'}"
             >
                 {option.label}
-            </a>
+            </button>
         {/each}
     </div>
 
     <div class="bg-[#0A0A0A]/60 backdrop-blur-xl border border-white/5 rounded-3xl overflow-hidden shadow-2xl">
-        {#if data.leaderboard && data.leaderboard.length > 0}
+        {#if sortedLeaderboard.length > 0}
             <ul class="p-3 sm:p-4 flex flex-col gap-3 sm:gap-4">
-                {#each data.leaderboard as user, index (user.id)}
+                {#each sortedLeaderboard as user, index (user.id)}
                     <li>
                         <a 
                             href={resolve(`/profile/${user.id}`)} 
@@ -88,19 +103,19 @@
                                 </div>
                             </div>
                             
-                            {#if data.currentSort === 'gems'}
+                            {#if sortBy === 'gems'}
                                 <div class="text-blue-400 font-black tracking-widest bg-blue-500/10 border border-blue-500/20 px-2 py-1.5 sm:px-4 sm:py-2 rounded-xl flex items-center gap-1 sm:gap-2 shrink-0">
                                     <span class="text-sm sm:text-base">{user.gems || 0}</span>
                                     <span class="text-base sm:text-lg grayscale group-hover:grayscale-0 transition-all">💎</span>
                                 </div>
-                            {:else if data.currentSort === 'total'}
+                            {:else if sortBy === 'total'}
                                 <div class="text-amber-400 font-black tracking-widest bg-amber-500/10 border border-amber-500/20 px-2 py-1.5 sm:px-4 sm:py-2 rounded-xl flex items-center gap-1 sm:gap-2 shrink-0">
-                                    <span class="text-sm sm:text-base">{user.totalCount}</span>
+                                    <span class="text-sm sm:text-base">{user.totalCount || 0}</span>
                                     <span class="text-base sm:text-lg grayscale group-hover:grayscale-0 transition-all">🥚</span>
                                 </div>
                             {:else}
                                 <div class="text-emerald-400 font-black tracking-widest bg-emerald-500/10 border border-emerald-500/20 px-2 py-1.5 sm:px-4 sm:py-2 rounded-xl flex items-center gap-1 sm:gap-2 shrink-0">
-                                    <span class="text-sm sm:text-base">{user.uniqueCount}</span>
+                                    <span class="text-sm sm:text-base">{user.uniqueCount || 0}</span>
                                     <span class="text-emerald-600/50 text-xs sm:text-sm hidden min-[380px]:inline">/ 105</span> 
                                     <span class="text-base sm:text-lg grayscale group-hover:grayscale-0 transition-all">✨</span>
                                 </div>
