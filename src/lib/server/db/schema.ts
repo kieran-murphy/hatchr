@@ -15,6 +15,7 @@ export const user = pgTable('user', {
 		.$onUpdate(() => new Date())
 		.notNull(),
 	lastChestClaimedAt: timestamp('last_chest_claimed_at', { mode: 'date' }),
+	lastDailyRewardClaimedAt: timestamp('last_daily_reward_claimed_at', { mode: 'date' }),
 	gems: integer('gems').default(500).notNull()
 });
 

@@ -4,60 +4,88 @@ import { eq, sql } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
 
-const COOLDOWN_HOURS = 0.5; // 30 minutes cooldown
-const COOLDOWN_MS = COOLDOWN_HOURS * 60 * 60 * 1000;
-// const COOLDOWN_MS = 20 * 1000; // For testing purposes, set cooldown to 20 seconds
+const SMALL_COOLDOWN_MS = 1 * 60 * 60 * 1000;      // 1 hour
+const DAILY_COOLDOWN_MS = 24 * 60 * 60 * 1000;    // 24 hours
 
 export const load: PageServerLoad = async ({ locals }) => {
     if (!locals.user) throw redirect(302, '/login');
     
     const [freshUser] = await db
-        .select({ lastChestClaimedAt: userTable.lastChestClaimedAt })
+        .select({ 
+            lastChestClaimedAt: userTable.lastChestClaimedAt,
+            lastDailyRewardClaimedAt: userTable.lastDailyRewardClaimedAt 
+        })
         .from(userTable)
         .where(eq(userTable.id, locals.user.id))
         .limit(1);
 
     return {
-        lastChestClaimedAt: freshUser?.lastChestClaimedAt || null
+        lastChestClaimedAt: freshUser?.lastChestClaimedAt || null,
+        lastDailyRewardClaimedAt: freshUser?.lastDailyRewardClaimedAt || null
     };
 };
 
 export const actions: Actions = {
-    buyGems: async ({ locals }) => {
+    // 1-Hour Small Reward Action
+    claimSmall: async ({ locals }) => {
         const user = locals.user;
         if (!user) return fail(401);
 
         const now = new Date();
-
         const [freshUser] = await db
             .select({ lastChestClaimedAt: userTable.lastChestClaimedAt })
             .from(userTable)
-            .where(eq(userTable.id, locals.user.id))
+            .where(eq(userTable.id, user.id))
             .limit(1);
 
         if (freshUser?.lastChestClaimedAt) {
-            const lastClaimed = new Date(freshUser.lastChestClaimedAt);
-            const timeSinceLastClaim = now.getTime() - lastClaimed.getTime();
-            
-            if (timeSinceLastClaim < COOLDOWN_MS) {
-                return fail(400, { message: "Chest is still cooling down!" });
+            const timeSinceLastClaim = now.getTime() - freshUser.lastChestClaimedAt.getTime();
+            if (timeSinceLastClaim < SMALL_COOLDOWN_MS) {
+                return fail(400, { message: "Small chest is still cooling down!" });
             }
         }
 
-        const randomAmount = Math.floor(Math.random() * (600 - 200 + 1)) + 200;
+        const amount = Math.floor(Math.random() * (600 - 200 + 1)) + 200;
 
-        try {
-            await db.update(userTable)
-                .set({ 
-                    gems: sql`${userTable.gems} + ${randomAmount}`,
-                    lastChestClaimedAt: now
-                })
-                .where(eq(userTable.id, user.id));
+        await db.update(userTable)
+            .set({ 
+                gems: sql`${userTable.gems} + ${amount}`,
+                lastChestClaimedAt: now
+            })
+            .where(eq(userTable.id, user.id));
 
-            return { success: true, added: randomAmount, claimedAt: now.toISOString() };
-        } catch (e) {
-            console.error('Failed to process mystery chest:', e);
-            return fail(500, { message: "The bank is closed. Try again later." });
+        return { success: true, added: amount, type: 'small' };
+    },
+
+    // 24-Hour Big Reward Action
+    claimDaily: async ({ locals }) => {
+        const user = locals.user;
+        if (!user) return fail(401);
+
+        const now = new Date();
+        const [freshUser] = await db
+            .select({ lastDailyRewardClaimedAt: userTable.lastDailyRewardClaimedAt })
+            .from(userTable)
+            .where(eq(userTable.id, user.id))
+            .limit(1);
+
+        if (freshUser?.lastDailyRewardClaimedAt) {
+            const timeSinceLastClaim = now.getTime() - freshUser.lastDailyRewardClaimedAt.getTime();
+            if (timeSinceLastClaim < DAILY_COOLDOWN_MS) {
+                return fail(400, { message: "Daily reward is not ready yet!" });
+            }
         }
+
+        // Bigger reward for daily streak
+        const amount = Math.floor(Math.random() * (2000 - 200 + 1)) + 300;
+
+        await db.update(userTable)
+            .set({ 
+                gems: sql`${userTable.gems} + ${amount}`,
+                lastDailyRewardClaimedAt: now
+            })
+            .where(eq(userTable.id, user.id));
+
+        return { success: true, added: amount, type: 'daily' };
     }
 };

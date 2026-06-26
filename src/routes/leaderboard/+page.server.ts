@@ -1,6 +1,6 @@
 import { db } from '$lib/server/db';
 import { user, creatures } from '$lib/server/db/schema';
-import { desc, sql, eq } from 'drizzle-orm';
+import { sql, eq } from 'drizzle-orm';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {

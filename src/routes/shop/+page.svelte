@@ -5,76 +5,72 @@
 
     let { data, form } = $props();
 
-    let isOpening = $state(false);
-    let showRollingNumber = $state(false);
-    let displayAmount = $state(0);
-    
-    let confettiGems = $state<{
-        id: number, left: number, delay: number, duration: number, scale: number, startRot: number, endRot: number, drift: number
-    }[]>([]);
+    // -- Tab State --
+    let activeTab = $state<'small' | 'daily'>('small');
 
-    let lastClaimed = $derived<Date | null>(data.lastChestClaimedAt ? new Date(data.lastChestClaimedAt) : null);
-    let timeRemaining = $state('');
-    let isCooldown = $state(false);
+    // -- Cooldown Logic --
+    const SMALL_COOLDOWN_MS = 1 * 60 * 60 * 1000;      // 1 hour
+    const DAILY_COOLDOWN_MS = 24 * 60 * 60 * 1000;    // 24 hours
+
+    let smallTimer = $state('');
+    let dailyTimer = $state('');
+    let isSmallCooldown = $state(false);
+    let isDailyCooldown = $state(false);
     let timerInterval: ReturnType<typeof setInterval>;
-    
-    const COOLDOWN_MS = 0.5 * 60 * 60 * 1000;
-    // const COOLDOWN_MS = 20 * 1000;
 
-    function updateTimer() {
-        if (!lastClaimed) {
-            isCooldown = false;
-            return;
+    function formatTime(remaining: number) {
+        if (remaining <= 0) return '';
+        const hours = Math.floor((remaining / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((remaining / 1000 / 60) % 60);
+        const seconds = Math.floor((remaining / 1000) % 60);
+        return `${hours}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
+    }
+
+    function updateTimers() {
+        const now = new Date().getTime();
+        
+        // Small Chest Timer
+        if (data.lastChestClaimedAt) {
+            const diff = now - new Date(data.lastChestClaimedAt).getTime();
+            if (diff < SMALL_COOLDOWN_MS) {
+                isSmallCooldown = true;
+                smallTimer = formatTime(SMALL_COOLDOWN_MS - diff);
+            } else { isSmallCooldown = false; }
         }
 
-        const now = new Date();
-        const elapsed = now.getTime() - lastClaimed.getTime();
-        const remaining = COOLDOWN_MS - elapsed;
-
-        if (remaining <= 0) {
-            isCooldown = false;
-            timeRemaining = '';
-            lastClaimed = null;
-            if (timerInterval) clearInterval(timerInterval);
-        } else {
-            isCooldown = true;
-            const hours = Math.floor((remaining / (1000 * 60 * 60)) % 24);
-            const minutes = Math.floor((remaining / 1000 / 60) % 60);
-            const seconds = Math.floor((remaining / 1000) % 60);
-            
-            const mStr = minutes.toString().padStart(2, '0');
-            const sStr = seconds.toString().padStart(2, '0');
-            
-            timeRemaining = `${hours}h ${mStr}m ${sStr}s`;
+        // Daily Fortune Timer
+        if (data.lastDailyRewardClaimedAt) {
+            const diff = now - new Date(data.lastDailyRewardClaimedAt).getTime();
+            if (diff < DAILY_COOLDOWN_MS) {
+                isDailyCooldown = true;
+                dailyTimer = formatTime(DAILY_COOLDOWN_MS - diff);
+            } else { isDailyCooldown = false; }
         }
     }
 
     onMount(() => {
-        updateTimer();
-        timerInterval = setInterval(updateTimer, 1000);
+        updateTimers();
+        timerInterval = setInterval(updateTimers, 1000);
     });
 
-    onDestroy(() => {
-        if (timerInterval) clearInterval(timerInterval);
-    });
+    onDestroy(() => clearInterval(timerInterval));
 
-    function animateCount(start: number, end: number, duration: number): Promise<void> {
-        return new Promise((resolve) => {
+    // -- Animation State --
+    let isOpening = $state(false);
+    let showRollingNumber = $state(false);
+    let displayAmount = $state(0);
+    let confettiGems = $state<any[]>([]);
+
+    async function animateCount(start: number, end: number, duration: number) {
+        return new Promise<void>((resolve) => {
             let startTime: number | null = null;
-
             function step(timestamp: number) {
                 if (!startTime) startTime = timestamp;
                 const progress = Math.min((timestamp - startTime) / duration, 1);
-                
-                // easeOutQuad easing for a nice slowdown effect at the end
                 const easeOut = 1 - (1 - progress) * (1 - progress);
                 displayAmount = Math.floor(easeOut * (end - start) + start);
-
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                } else {
-                    resolve();
-                }
+                if (progress < 1) window.requestAnimationFrame(step);
+                else resolve();
             }
             window.requestAnimationFrame(step);
         });
@@ -87,42 +83,25 @@
 
         return async ({ result, update }) => {
             await update();
-            
             if (result.type === 'success' && result.data?.added) {
                 const amountAdded = Number(result.data.added);
-                
-                if (result.data.claimedAt) {
-                    lastClaimed = new Date(result.data.claimedAt as string);
-                    updateTimer();
-                    clearInterval(timerInterval);
-                    timerInterval = setInterval(updateTimer, 1000);
-                }
-
-                // 1. Wait for the number to count up (1.5 seconds)
                 await animateCount(0, amountAdded, 1500);
-
-                // 2. THEN do the diamond animation
+                
+                // Diamond Fall Effect
                 const particleCount = Math.min(200, Math.max(30, Math.floor(amountAdded / 5)));
-                confettiGems = Array.from({ length: particleCount }).map((_, i) => {
-                    const startRot = Math.random() * 360;
-                    return {
-                        id: i,
-                        left: Math.random() * 100,
-                        // delay: Number((Math.random() * 0.3).toFixed(2)),
-                        delay: 0,
-                        duration: Number((Math.random() * 2.0 + 1.2).toFixed(2)), 
-                        scale: Number((Math.random() * 0.8 + 0.6).toFixed(2)), 
-                        startRot: startRot,
-                        endRot: startRot + (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 180 + 90),
-                        drift: Math.random() * 30 - 15 
-                    };
-                });
+                confettiGems = Array.from({ length: particleCount }).map((_, i) => ({
+                    id: i, 
+                    left: Math.random() * 100, 
+                    duration: Math.random() * 2 + 1.5,
+                    scale: Math.random() * 0.8 + 0.6,
+                    drift: Math.random() * 20 - 10
+                }));
 
                 setTimeout(() => {
                     isOpening = false;
                     showRollingNumber = false;
                     confettiGems = [];
-                }, 4500);
+                }, 4000);
             } else {
                 isOpening = false;
                 showRollingNumber = false;
@@ -131,66 +110,51 @@
     };
 </script>
 
-<div class="max-w-4xl mx-auto py-16 px-6 relative">
+<div class="max-w-md mx-auto py-16 px-6">
     <header class="text-center mb-12">
-        <h1 class="text-5xl font-black text-white italic tracking-tighter uppercase">The Gem Shop</h1>
-        <p class="text-gray-500 mt-2 font-medium">Top up your balance to keep hatching!</p>
+        <h1 class="text-5xl font-black text-white italic tracking-tighter uppercase">Gem Shop</h1>
     </header>
 
-    <div class="max-w-md mx-auto">
-        <div class="bg-gray-900 border border-white/10 rounded-3xl p-8 flex flex-col items-center gap-6 transition-all hover:border-blue-500/50 hover:bg-blue-500/5 relative"
-             class:opacity-80={isCooldown}>
-            
-            {#if isOpening}
-                <div class="absolute inset-0 bg-blue-500/20 blur-2xl z-0 rounded-3xl pointer-events-none animate-pulse"></div>
-            {/if}
+    <div class="flex p-1 bg-white/5 border border-white/10 rounded-2xl mb-8">
+        <button 
+            onclick={() => activeTab = 'small'}
+            class="flex-1 py-3 text-sm font-black uppercase tracking-widest rounded-xl transition-all {activeTab === 'small' ? 'bg-white text-black' : 'text-slate-400 hover:text-white'}"
+        >
+            Gem Chest
+        </button>
+        <button 
+            onclick={() => activeTab = 'daily'}
+            class="flex-1 py-3 text-sm font-black uppercase tracking-widest rounded-xl transition-all {activeTab === 'daily' ? 'bg-yellow-500/20 text-yellow-500' : 'text-slate-400 hover:text-white'}"
+        >
+            Daily Fortune
+        </button>
+    </div>
 
-            <div class="text-7xl origin-center inline-block z-10"
-                 class:chest-animating={isOpening}
-                 class:grayscale={isCooldown}>
-                🎁
+    {#if activeTab === 'small'}
+        <div class="bg-gray-900 border border-white/10 rounded-3xl p-8 flex flex-col items-center gap-6" class:opacity-80={isSmallCooldown}>
+            <div class="text-7xl">🎁</div>
+            <div class="text-center">
+                <h3 class="text-xl font-bold text-white">Gem Chest</h3>
+                <p class="text-blue-400 font-black text-2xl mt-1">{showRollingNumber ? `${displayAmount} 💎` : 'Every 1 Hour'}</p>
             </div>
-            
-            <div class="text-center z-10">
-                <h3 class="text-2xl font-bold text-white">Mystery Chest</h3>
-                <p class="text-blue-400 font-black text-3xl mt-1">
-                    {#if showRollingNumber}
-                        {displayAmount} 💎
-                    {:else}
-                        ??? 💎
-                    {/if}
-                </p>
-                <p class="text-gray-500 text-sm mt-2 font-medium">
-                    {#if isCooldown}
-                        Come back later for more!
-                    {:else}
-                        Amount is completely random!
-                    {/if}
-                </p>
-            </div>
-
-            <form method="POST" action="?/buyGems" use:enhance={handleClaim} class="w-full z-10 mt-2">
-                <button 
-                    disabled={isOpening || isCooldown}
-                    class="w-full px-8 py-4 bg-white text-black text-lg font-bold rounded-xl transition-colors disabled:opacity-50 disabled:cursor-not-allowed
-                           {!(isOpening || isCooldown) ? 'hover:bg-blue-500 hover:text-white cursor-pointer' : ''}
-                           {isCooldown ? 'bg-gray-800 text-gray-400 border border-gray-700' : ''}">
-                    
-                    {#if isOpening}
-                        OPENING...
-                    {:else if isCooldown}
-                        🔒 {timeRemaining}
-                    {:else}
-                        CLAIM FREE
-                    {/if}
+            <form method="POST" action="?/claimSmall" use:enhance={handleClaim} class="w-full">
+                <button disabled={isOpening || isSmallCooldown} class="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-blue-500 hover:text-white disabled:opacity-50">
+                    {isSmallCooldown ? `Locked: ${smallTimer}` : 'Claim Free'}
                 </button>
             </form>
         </div>
-    </div>
-
-    {#if form?.success && !isOpening}
-        <div class="mt-12 max-w-md mx-auto p-4 bg-green-500/10 border border-green-500/20 text-green-400 rounded-2xl text-center font-bold animate-pulse">
-            Successfully added {form.added} gems to your account!
+    {:else}
+        <div class="bg-gradient-to-b from-yellow-900/20 to-black border border-yellow-500/30 rounded-3xl p-8 flex flex-col items-center gap-6" class:opacity-80={isDailyCooldown}>
+            <div class="text-7xl animate-bounce">✨</div>
+            <div class="text-center">
+                <h3 class="text-xl font-bold text-yellow-100">Daily Fortune</h3>
+                <p class="text-yellow-400 font-black text-2xl mt-1">{showRollingNumber ? `${displayAmount} 💎` : 'Every 24 Hours'}</p>
+            </div>
+            <form method="POST" action="?/claimDaily" use:enhance={handleClaim} class="w-full">
+                <button disabled={isOpening || isDailyCooldown} class="w-full py-4 bg-yellow-500 text-black font-bold rounded-xl hover:bg-yellow-400 disabled:opacity-50">
+                    {isDailyCooldown ? `Locked: ${dailyTimer}` : 'Claim Daily Fortune'}
+                </button>
+            </form>
         </div>
     {/if}
 </div>
@@ -198,16 +162,8 @@
 {#if confettiGems.length > 0}
     <div class="fixed inset-0 pointer-events-none z-[100] overflow-hidden">
         {#each confettiGems as gem (gem.id)}
-            <div class="absolute text-4xl gem-particle"
-                 style="
-                    left: {gem.left}vw; 
-                    --delay: {gem.delay}s;
-                    --duration: {gem.duration}s;
-                    --scale: {gem.scale};
-                    --start-rot: {gem.startRot};
-                    --end-rot: {gem.endRot};
-                    --drift: {gem.drift};
-                 ">
+            <div class="absolute text-3xl gem-particle" 
+                 style="left: {gem.left}vw; --duration: {gem.duration}s; --scale: {gem.scale}; --drift: {gem.drift}vw;">
                 💎
             </div>
         {/each}
@@ -215,38 +171,14 @@
 {/if}
 
 <style>
-    .chest-animating {
-        animation: burst 0.7s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-    }
-
-    @keyframes burst {
-        0% { transform: scale(1); filter: drop-shadow(0 0 0px rgba(59, 130, 246, 0)); }
-        15% { transform: scale(1.2) rotate(-10deg); }
-        30% { transform: scale(1.3) rotate(10deg); filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.5)); }
-        45% { transform: scale(1.2) rotate(-10deg); }
-        60% { transform: scale(1.5) translateY(-10px); filter: drop-shadow(0 0 30px rgba(59, 130, 246, 1)); }
-        100% { transform: scale(1) translateY(0); filter: drop-shadow(0 0 0px rgba(59, 130, 246, 0)); }
-    }
-
     .gem-particle {
-        top: -10vh; 
-        animation: natural-fall var(--duration) ease-in forwards;
-        animation-delay: var(--delay);
+        top: -10vh;
+        animation: diamond-fall var(--duration) linear forwards;
     }
-
-    @keyframes natural-fall {
-        0% { 
-            top: -10vh; 
-            transform: translateX(0) rotate(calc(var(--start-rot) * 1deg)) scale(var(--scale)); 
-            opacity: 1; 
-        }
-        85% { 
-            opacity: 1; 
-        }
-        100% { 
+    @keyframes diamond-fall {
+        to { 
             top: 110vh; 
-            transform: translateX(calc(var(--drift) * 1vw)) rotate(calc(var(--end-rot) * 1deg)) scale(var(--scale)); 
-            opacity: 0; 
+            transform: translateY(0) translateX(var(--drift)) rotate(360deg) scale(var(--scale)); 
         }
     }
 </style>
