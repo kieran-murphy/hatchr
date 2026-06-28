@@ -33,8 +33,10 @@
     let isReleasing = $state(false);
 
     let duplicateSummary = $derived.by(() => {
+        const getCombo = (c) => c.type2 ? [c.type1, c.type2].sort().join('-') : c.type1;
+
         const duplicates = visibleCreatures.filter((c, index, self) => 
-            self.findIndex(t => t.type1 === c.type1 && t.type2 === c.type2) !== index
+            self.findIndex(t => getCombo(t) === getCombo(c)) !== index
         );
         
         const count = duplicates.length;
