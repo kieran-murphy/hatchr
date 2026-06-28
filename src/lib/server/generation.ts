@@ -3,8 +3,6 @@ import { creatureQueue, dualCreatureQueue } from '$lib/server/db/schema';
 import { TYPE_RARITY_MAP, rarityWeight, type Rarity } from '$lib/game';
 import { env } from '$env/dynamic/private';
 import { count } from 'drizzle-orm';
-// import fs from 'node:fs';
-// import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { UTApi } from "uploadthing/server";
 
@@ -22,21 +20,17 @@ function selectRandomTypes(amount: number): string[] {
     const selectedTypes = new Set<string>();
 
     while (selectedTypes.size < amount) {
-        // 1. Roll a number between 1 and 100
         const roll = Math.random() * 100;
         
-        // 2. Determine which rarity tier won the roll
         let targetRarity = 'COMMON';
         if (roll > 60 && roll <= 85) targetRarity = 'UNCOMMON';
         if (roll > 85 && roll <= 96) targetRarity = 'RARE';
         if (roll > 96) targetRarity = 'LEGENDARY';
 
-        // 3. Filter your available types to only those that match the winning rarity
         const eligibleTypes = AVAILABLE_TYPES.filter(type => 
             TYPE_RARITY_MAP[type] === targetRarity
         );
 
-        // 4. Pick a random type from that specific rarity pool
         if (eligibleTypes.length > 0) {
             const randomEligibleType = eligibleTypes[Math.floor(Math.random() * eligibleTypes.length)];
             selectedTypes.add(randomEligibleType);
@@ -69,7 +63,7 @@ async function generateCreatureText(types: string[], rarity: string): Promise<{ 
         body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: { 
-                responseMimeType: "application/json" // Forces Gemini to return pure JSON
+                responseMimeType: "application/json" 
             }
         })
     });
@@ -116,22 +110,17 @@ async function generateAndSaveImage(prompt: string, types: string[]): Promise<st
 
     const typeString = types.join('__');
     
-    // Construct the custom file name with the Types and a secure UUID
     const customFileName = `${typeString}-${randomUUID()}.png`;
-    console.log("customFileName === ", customFileName)
 
-    // Convert buffer to a File object with your custom name
     const blob = new Blob([buffer], { type: 'image/png' });
     const file = new File([blob], customFileName, { type: 'image/png' });
 
-    // Upload to UploadThing
     const uploadResponse = await utapi.uploadFiles(file);
 
     if (uploadResponse.error) {
         throw new Error(`UploadThing Error: ${uploadResponse.error.message}`);
     }
 
-    // Return the persistent, public URL provided by UploadThing
     return uploadResponse.data.url;
 }
 

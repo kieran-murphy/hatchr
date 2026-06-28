@@ -1,8 +1,8 @@
 import { db } from '$lib/server/db';
-import { creatures } from '$lib/server/db/schema';
+import { creatures, user as userTable } from '$lib/server/db/schema';
 import { eq, desc, asc, and, or, sql, inArray } from 'drizzle-orm';
 import { redirect } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
+import type { PageServerLoad, Actions } from './$types';
 
 export const load: PageServerLoad = async ({ url, locals }) => {
     if (!locals.user) {
@@ -76,4 +76,52 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         creatures: userCreatures,
         typeCounts: typeCounts
     };
+};
+
+export const actions: Actions = {
+    bulkRelease: async ({ locals }) => {
+        if (!locals.user) throw redirect(302, '/login');
+
+        const allSafeCreatures = await db.query.creatures.findMany({
+            where: and(
+                eq(creatures.userId, locals.user.id),
+                eq(creatures.isFavorite, false) 
+            ),
+            orderBy: [asc(creatures.hatchedAt)] 
+        });
+
+        const seenCombos = new Set<string>();
+        const idsToDelete: string[] = [];
+        let totalGemsReward = 0;
+
+        for (const creature of allSafeCreatures) {
+            const types = [creature.type1];
+            if (creature.type2) types.push(creature.type2);
+            const comboKey = types.sort().join('-');
+
+            if (!seenCombos.has(comboKey)) {
+                seenCombos.add(comboKey);
+            } else {
+                idsToDelete.push(creature.id);
+                totalGemsReward += creature.type2 ? 100 : 50; 
+            }
+        }
+
+        if (idsToDelete.length > 0) {
+            await db.transaction(async (tx) => {
+                await tx.delete(creatures)
+                    .where(inArray(creatures.id, idsToDelete));
+                
+                await tx.update(userTable)
+                    .set({ gems: sql`${userTable.gems} + ${totalGemsReward}` })
+                    .where(eq(userTable.id, locals.user.id));
+            });
+        }
+
+        return { 
+            success: true, 
+            releasedCount: idsToDelete.length, 
+            gemsEarned: totalGemsReward 
+        };
+    }
 };

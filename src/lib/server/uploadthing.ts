@@ -5,8 +5,7 @@ const f = createUploadthing();
 export const ourFileRouter = {
   creatureImage: f({ image: { maxFileSize: "4MB" } })
     .onUploadComplete(async ({ file }) => {
-      // Return the file URL so we can save it in the DB
-      return { url: file.url };
+      return { url: file.ufsUrl };
     }),
 } satisfies FileRouter;
 

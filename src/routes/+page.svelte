@@ -1,10 +1,13 @@
 <script lang="ts">
     import { flip } from 'svelte/animate';
     import { quintOut } from 'svelte/easing';
-    import { scale } from 'svelte/transition';
+    import { scale, fade } from 'svelte/transition';
     import { ListFilter } from '@lucide/svelte';
     import { resolve } from '$app/paths';
+    import { enhance } from '$app/forms';
     import { typeStyles } from '$lib/game.js';
+
+    import CreatureCard from '$lib/components/CreatureCard.svelte';
 
     let { data } = $props();
 
@@ -25,6 +28,20 @@
     let isTypeMenuOpen = $state(false);
     let isSortMenuOpen = $state(false);
     let showDuplicates = $state(false);
+
+    let isSellModalOpen = $state(false);
+    let isReleasing = $state(false);
+
+    let duplicateSummary = $derived.by(() => {
+        const duplicates = visibleCreatures.filter((c, index, self) => 
+            self.findIndex(t => t.type1 === c.type1 && t.type2 === c.type2) !== index
+        );
+        
+        const count = duplicates.length;
+        const gems = duplicates.reduce((acc, c) => acc + (c.type2 ? 100 : 50), 0);
+        
+        return { count, gems };
+    });
 
     async function reloadCollection() {
         isLoading = true;
@@ -195,6 +212,19 @@
                     </div>
                 {/if}
             </div>
+
+            {#if showDuplicates && visibleCreatures.length > 0}
+                <button 
+                    onclick={() => isSellModalOpen = true}
+                    in:scale={{ duration: 200 }}
+                    class="w-full md:w-auto flex items-center justify-center gap-2 bg-red-500/10 border border-red-500/20 rounded-2xl px-5 py-3 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-colors cursor-pointer shadow-[0_0_15px_rgba(239,68,68,0.1)]"
+                >
+                    <span class="text-[10px] font-black uppercase tracking-widest">
+                        Sell All Duplicates
+                    </span>
+                </button>
+            {/if}
+
         </div>
     </header>
     
@@ -219,46 +249,7 @@
                     in:scale={{ duration: 300, start: 0.9 }}
                     class="group"
                 >
-                    <a
-                        href={resolve(`/creature/${creature.id}`)}
-                        class="group relative rounded-2xl border border-white/5 bg-[#0A0A0A]/60 backdrop-blur-md p-4 transition-all hover:-translate-y-2 hover:border-white/20 hover:bg-[#0D0D0D] block"
-                    >
-                        <div class="mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-white/5 bg-black/40">
-                            <img
-                                src={creature.imageUrl}
-                                alt={creature.speciesName}
-                                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                            />
-                        </div>
-
-                        <div class="space-y-2">
-                            <div class="flex flex-col items-start gap-1.5">
-                                <div class="flex flex-wrap items-center gap-2">
-                                    {#if creature.type1 && typeStyles[creature.type1]}
-                                        <span class="inline-flex items-center gap-1.5 rounded border border-white/5 bg-white/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter {typeStyles[creature.type1].text}">
-                                            <span class="w-1.5 h-1.5 rounded-full {typeStyles[creature.type1].dot}"></span>
-                                            {creature.type1}
-                                        </span>
-                                    {/if}
-
-                                    {#if creature.type2 && typeStyles[creature.type2]}
-                                        <span class="inline-flex items-center gap-1.5 rounded border border-white/5 bg-white/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter {typeStyles[creature.type2].text}">
-                                            <span class="w-1.5 h-1.5 rounded-full {typeStyles[creature.type2].dot}"></span>
-                                            {creature.type2}
-                                        </span>
-                                    {/if}
-                                </div>
-                                
-                                <span class="inline-block rounded border px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter {rarityColors[creature.rarity]}">
-                                    {creature.rarity}
-                                </span>
-                            </div>
-                            
-                            <h3 class="text-lg leading-tight font-black italic tracking-tighter text-white uppercase group-hover:text-blue-400 transition-colors">
-                                {creature.speciesName}
-                            </h3>
-                        </div>
-                    </a>
+                    <CreatureCard {creature} />
                 </div>
             {/each}
         </div>
@@ -276,6 +267,87 @@
         {/if}
     {/if}
 </div>
+
+{#if isSellModalOpen}
+    <div 
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" 
+        transition:fade={{ duration: 200 }}
+    >
+        <div 
+            class="bg-[#0A0A0A] border border-red-500/30 rounded-3xl p-8 max-w-md w-full shadow-[0_0_40px_rgba(239,68,68,0.15)] relative overflow-hidden" 
+            in:scale={{ start: 0.95, duration: 200, easing: quintOut }}
+        >
+            <div class="absolute -top-20 -right-20 w-40 h-40 bg-red-600/20 rounded-full blur-[50px] pointer-events-none"></div>
+
+            <h2 class="text-2xl font-black text-white italic uppercase tracking-tighter mb-3">Bulk Release</h2>
+            
+            <p class="text-slate-400 text-sm mb-6 leading-relaxed font-medium">
+                Are you sure you want to release 
+                <strong class="text-white">{duplicateSummary.count} duplicate creatures</strong> 
+                back to the wild? 
+            </p>
+
+            <div class="bg-white/5 border border-white/10 rounded-xl p-4 mb-8">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-2">How it works:</p>
+                <ul class="text-[11px] text-slate-300 space-y-2 list-disc list-inside">
+                    <li><span class="text-white">Newest duplicates</span> will be released.</li>
+                    <li><span class="text-white">Oldest originals</span> will be kept.</li>
+                    <li><span class="text-red-400">Favorited creatures</span> will be spared.</li>
+                </ul>
+            </div>
+
+            <p class="text-white text-sm mb-8 font-black">
+                You will receive a total of <span class="text-emerald-400">{duplicateSummary.gems} 💎</span>.
+            </p>
+            
+            <div class="flex items-center gap-4">
+                <button
+                    onclick={() => isSellModalOpen = false}
+                    disabled={isReleasing}
+                    class="flex-1 py-3 px-4 rounded-xl font-black uppercase tracking-widest text-xs text-slate-400 hover:text-white transition-colors bg-white/5 hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    Cancel
+                </button>
+
+                <form
+                    method="POST"
+                    action="?/bulkRelease"
+                    use:enhance={() => {
+                        isReleasing = true;
+                        return async ({ result, update }) => {
+                            isReleasing = false;
+                            isSellModalOpen = false;
+                            
+                            if (result.type === 'success') {
+                                const count = result.data?.releasedCount || 0;
+                                const gems = result.data?.gemsEarned || 0;
+                                
+                                if (count > 0) {
+                                    alert(`Successfully released ${count} duplicates for ${gems} 💎!`);
+                                    await reloadCollection();
+                                } else {
+                                    alert("No eligible duplicates found to release.");
+                                }
+                            } else {
+                                alert("Failed to release creatures. Please try again.");
+                            }
+                            update();
+                        };
+                    }}
+                    class="flex-1"
+                >
+                    <button
+                        type="submit"
+                        disabled={isReleasing}
+                        class="w-full py-3 px-4 rounded-xl font-black uppercase tracking-widest text-xs text-white bg-red-600 hover:bg-red-500 active:scale-95 transition-all shadow-lg shadow-red-600/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isReleasing ? 'Releasing...' : 'Confirm'}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+{/if}
 
 <style>
     .custom-scrollbar::-webkit-scrollbar {
