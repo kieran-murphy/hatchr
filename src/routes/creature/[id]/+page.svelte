@@ -9,8 +9,15 @@
     let creature = $derived(data.creature);
     
     let isOwner = $derived(data.isOwner ?? (data.user?.id === creature?.userId));
-    
     let releaseReward = $derived(creature?.type2 ? 100 : 50);
+
+    let isFavorite = $state(data.creature?.isFavorite ?? false);
+
+    $effect(() => {
+        if (data.creature) {
+            isFavorite = data.creature.isFavorite;
+        }
+    });
 
     const rarityColors = {
         COMMON: 'text-gray-400',
@@ -70,13 +77,27 @@
                     </div>
 
                     {#if isOwner}
-                        <form method="POST" action="?/toggleFavorite" use:enhance>
-                            <input type="hidden" name="isFavorite" value={creature.isFavorite} />
+                        <form 
+                            method="POST" 
+                            action="?/toggleFavorite" 
+                            use:enhance={() => {
+                                const previousState = isFavorite;
+                                isFavorite = !isFavorite; // Toggle instantly
+
+                                return async ({ result, update }) => {
+                                    if (result.type === 'failure' || result.type === 'error') {
+                                        isFavorite = previousState; // Revert if the DB fails
+                                    }
+                                    await update({ reset: false }); // Prevent form wipe
+                                };
+                            }}
+                        >
+                            <input type="hidden" name="isFavorite" value={isFavorite} />
                             <button 
                                 type="submit"
-                                class="p-4 rounded-2xl border transition-all active:scale-90 cursor-pointer {creature.isFavorite ? 'bg-yellow-400/10 border-yellow-400/50 text-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.2)]' : 'bg-white/5 border-white/10 text-slate-500 hover:text-white'}"
+                                class="p-4 rounded-2xl border transition-all active:scale-90 cursor-pointer {isFavorite ? 'bg-yellow-400/10 border-yellow-400/50 text-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.2)]' : 'bg-white/5 border-white/10 text-slate-500 hover:text-white'}"
                             >
-                                <Star size={24} fill={creature.isFavorite ? "currentColor" : "none"} />
+                                <Star size={24} fill={isFavorite ? "currentColor" : "none"} />
                             </button>
                         </form>
                     {/if}
