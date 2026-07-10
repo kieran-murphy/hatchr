@@ -93,7 +93,7 @@ export const actions = {
         const lastClaimed = currentUser.lastNewHatchClaimedAt?.getTime() || 0;
         
         if (Date.now() - lastClaimed < COOLDOWN_MS) {
-            return fail(400, { success: false, message: "Too early! Your egg is still incubating." });
+            return fail(400, { success: false, message: "Too early! Come back tomorrow." });
         }
 
         // 3. Gem validation
