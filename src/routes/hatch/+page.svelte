@@ -4,11 +4,42 @@
     import { elasticOut } from 'svelte/easing';
     import { resolve } from '$app/paths';
     import { typeStyles } from '$lib/game'; 
+    import { Loader2, ChevronDown } from '@lucide/svelte';
     
     let { data, form } = $props();
     
+    let isMenuOpen = $state(false);
     let hatching = $state(false);
-    let isDual = $state(false);
+    let hatchTier = $state<'single' | 'dual' | 'new'>('single');
+
+    // --- COOLDOWN LOGIC ---
+    const COOLDOWN_MS = 24 * 60 * 60 * 1000;
+    
+    // Reactive clock
+    let now = $state(Date.now());
+    $effect(() => {
+        const interval = setInterval(() => { now = Date.now(); }, 1000);
+        return () => clearInterval(interval);
+    });
+
+    // Calculate time remaining
+    let lastClaimed = $derived(data.user?.lastNewHatchClaimedAt?.getTime() || 0);
+    let msRemaining = $derived(Math.max(0, (lastClaimed + COOLDOWN_MS) - now));
+    let isReady = $derived(msRemaining === 0);
+
+    // Your nice game-style time formatter
+    function formatTime(remaining: number) {
+        if (remaining <= 0) return '';
+        const hours = Math.floor((remaining / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((remaining / 1000 / 60) % 60);
+        const seconds = Math.floor((remaining / 1000) % 60);
+        return `${hours}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
+    }
+
+    let formattedTime = $derived.by(() => {
+        if (isReady) return "Ready!";
+        return formatTime(msRemaining);
+    });
 
     const rarityStyles: Record<string, string> = {
         COMMON: 'text-gray-400 border-gray-400/20 bg-gray-400/5 shadow-[0_0_20px_rgba(156,163,175,0.1)]',
@@ -16,6 +47,14 @@
         RARE: 'text-blue-400 border-blue-400/20 bg-blue-400/5 shadow-[0_0_50px_rgba(37,99,235,0.5)]',
         LEGENDARY: 'text-yellow-400 border-yellow-400/40 bg-yellow-400/10 shadow-[0_0_80px_rgba(250,204,21,0.8),inset_0_0_30px_rgba(250,204,21,0.5)] animate-pulse'
     };
+
+    const tiers = [
+        { id: 'single', label: 'Single (100 💎)', style: 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)]' },
+        { id: 'dual', label: 'Dual (200 💎)', style: 'bg-gradient-to-r from-blue-600 to-red-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.4)]' },
+        { id: 'new', label: 'New (1000 💎)', style: 'bg-gradient-to-r from-emerald-500 to-green-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.6)]' }
+    ];
+
+    let selectedTier = $derived(tiers.find(t => t.id === hatchTier));
 
     const getSplashColor = (rarity: string) => {
         switch(rarity) {
@@ -35,22 +74,42 @@
         </div>
     </div>
 
-    <div class="flex bg-white/5 p-1 rounded-2xl border border-white/5">
+    <div class="relative w-full max-w-[280px]">
         <button 
-            onclick={() => isDual = false}
+            onclick={() => isMenuOpen = !isMenuOpen}
             disabled={hatching}
-            class="cursor-pointer px-6 py-3 rounded-xl font-black text-xs uppercase transition-all {!isDual ? 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)]' : 'text-gray-500 hover:text-white'}"
+            class="flex w-full items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-xs font-black uppercase text-white transition-all hover:bg-white/10"
         >
-            Single (100 💎)
+            <span>{selectedTier?.label || 'Select Tier'}</span>
+            <ChevronDown size={16} class="transition-transform {isMenuOpen ? 'rotate-180' : ''}" />
         </button>
-        <button 
-            onclick={() => isDual = true}
-            disabled={hatching}
-            class="cursor-pointer px-6 py-3 rounded-xl font-black text-xs uppercase transition-all {isDual ? 'bg-gradient-to-r from-blue-600 to-red-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.4)]' : 'text-gray-500 hover:text-white'}"
-        >
-            Dual (200 💎)
-        </button>
+
+        {#if isMenuOpen}
+            <div 
+                transition:fade={{ duration: 200 }} 
+                class="absolute top-full left-0 z-50 mt-2 w-full flex flex-col gap-1 rounded-xl border border-white/10 bg-[#0A0A0A] p-1 shadow-2xl"
+            >
+                {#each tiers as tier (tier.id)}
+                    <button 
+                        onclick={() => { 
+                            hatchTier = tier.id; 
+                            isMenuOpen = false; 
+                        }}
+                        class="w-full rounded-lg px-4 py-3 text-left text-xs font-black uppercase transition-all 
+                            {hatchTier === tier.id 
+                                ? `${tier.style} ring-1 ring-white/20` 
+                                : 'text-gray-400 hover:text-white hover:bg-white/5'}"
+                    >
+                        {tier.label}
+                    </button>
+                {/each}
+            </div>
+        {/if}
     </div>
+
+    {#if isMenuOpen}
+        <div class="fixed inset-0 z-40" onclick={() => isMenuOpen = false} role="button" aria-label="Close menu"></div>
+    {/if}
 
     <div class="min-h-[300px] grid place-items-center relative">
         
@@ -112,40 +171,66 @@
             </div>
             
         {:else if hatching}
-            <div in:fade class="col-start-1 row-start-1 text-9xl origin-bottom animate-crack">🥚</div>
+            <div in:fade class="col-start-1 row-start-1 text-9xl origin-bottom animate-crack">
+                🥚
+            </div>
             
         {:else}
             <div class="col-start-1 row-start-1 text-white/10 text-9xl italic font-black select-none transition-all hover:scale-105 hover:text-white/20">?</div>
         {/if}
         
     </div>
-
     <form 
         method="POST" 
+        action={hatchTier === 'new' ? '?/hatchNew' : '?/hatchRegular'}
         use:enhance={() => {
             hatching = true;
             return async ({ update }) => {
-                await new Promise(resolve => setTimeout(resolve, 1500));
+                if (hatchTier !== 'new') {
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                }
                 await update({ reset: false }); 
                 hatching = false;
             };
         }}
+        class="w-full max-w-sm"
     >
-        <input type="hidden" name="isDual" value={isDual.toString()} />
+        <input type="hidden" name="tier" value={hatchTier} />
+        
+        {#if hatchTier === 'new' && !isReady}
+        <div class="flex w-full cursor-not-allowed flex-col items-center justify-center rounded-2xl border border-white/5 bg-[#0A0A0A]/80 px-8 py-5 text-center shadow-inner">
+            <span class="text-xs font-black uppercase tracking-widest text-emerald-500/50">
+                Incubator Charging
+            </span>
+            <span class="mt-2 font-mono text-3xl font-black text-gray-400">
+                {formattedTime} </span>
+            <span class="mt-2 text-[10px] text-gray-600 uppercase font-bold tracking-widest">
+                Until next guaranteed new hatch
+            </span>
+        </div>
+    {:else}
         <button 
-            disabled={hatching || data.userGems < (isDual ? 200 : 100)}
-            class="group relative px-14 py-5 {isDual ? 'bg-gradient-to-r from-blue-600 to-red-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.4)]' : 'bg-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.4)]'} rounded-2xl font-black text-2xl overflow-hidden transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:grayscale cursor-pointer"
+            disabled={!isReady || hatching || data.userGems < (hatchTier === 'new' ? 1000 : hatchTier === 'dual' ? 200 : 100)}
+            class="flex items-center justify-center group relative w-full py-5 
+            {hatchTier === 'new' ? 'bg-gradient-to-r from-emerald-500 to-green-600 shadow-[0_0_20px_rgba(16,185,129,0.6)]' 
+            : hatchTier === 'dual' ? 'bg-gradient-to-r from-blue-600 to-red-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.4)]' 
+            : 'bg-blue-600 shadow-[0_0_20px_rgba(37,99,235,0.4)]'} 
+            rounded-2xl font-black text-2xl overflow-hidden transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:grayscale cursor-pointer"
         >
             <span class="relative z-10 flex items-center gap-3 text-white">
                 {#if hatching}
-                    CRACKING...
+                    <div class="flex items-center gap-2">
+                        <Loader2 class="animate-spin" size={20} />
+                        <span>CRACKING...</span>
+                    </div>
                 {:else}
                     <span>🥚</span> HATCH
                 {/if}
             </span>
             
-            <div class="absolute inset-0 bg-gradient-to-t from-transparent to-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+            <div class="absolute inset-0 bg-gradient-to-t from-transparent to-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300 pointer-events-none"></div>
         </button>
+    {/if}
     </form>
 
     {#if form?.message && !form?.success}

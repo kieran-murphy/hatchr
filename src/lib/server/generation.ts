@@ -216,3 +216,39 @@ export async function maintainDualCreatureQueue() {
         isGeneratingDual = false;
     }
 }
+
+// Add this to src/lib/server/generation.ts
+
+// Add this new function to your src/lib/server/generation.ts file
+
+export async function generateTargetedCreature(type1: string, type2: string | null = null) {
+    const isDual = !!type2;
+    const types = isDual ? [type1, type2] : [type1];
+    
+    // Rarity logic matching your existing createCreatureData
+    const rarity1 = TYPE_RARITY_MAP[types[0]];
+    const rarity2 = isDual ? TYPE_RARITY_MAP[types[1]] : rarity1;
+    const finalRarity: Rarity = rarityWeight[rarity1] >= rarityWeight[rarity2] ? rarity1 : rarity2;
+    
+    const aura = getAuraStyle(finalRarity);
+    
+    // Prompt structure identical to your original createCreatureData
+    const prompt = isDual 
+        ? `A cute, cartoon style digital art of a creature that is a balanced fusion of ${types[0]} and ${types[1]} elemental energy. It features a ${aura} combined ${types[0]} and ${types[1]}-related background. No words on the image and make it a square image with no border.`
+        : `A cute, cartoon style digital art of a ${types[0]} type creature. It features a ${aura} ${types[0]}-related background. No words on the image and make it a square image with no border.`;
+
+    const [imageUrl, textData] = await Promise.all([
+        generateAndSaveImage(prompt, types),
+        generateCreatureText(types, finalRarity)
+    ]);
+
+    return {
+        id: randomUUID(),
+        speciesName: textData.name, 
+        description: textData.description,
+        imageUrl,
+        rarity: finalRarity,
+        type1: types[0],
+        type2: isDual ? types[1] : null
+    };
+}
