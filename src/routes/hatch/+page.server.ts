@@ -8,13 +8,14 @@ export const load = async ({ locals }) => {
     if (!locals.user) throw redirect(302, '/login');
 
     const [userData] = await db
-        .select({ gems: userTable.gems })
+        .select({ gems: userTable.gems, lastNewHatchClaimedAt: userTable.lastNewHatchClaimedAt })
         .from(userTable)
         .where(eq(userTable.id, locals.user.id));
 
     return {
         userGems: userData?.gems ?? 0,
-        userId: locals.user.id
+        userId: locals.user.id,
+        lastNewHatchClaimedAt: userData?.lastNewHatchClaimedAt || null
     };
 };
 

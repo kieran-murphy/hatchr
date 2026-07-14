@@ -5,29 +5,19 @@
     import { resolve } from '$app/paths';
     import { typeStyles } from '$lib/game'; 
     import { Loader2, ChevronDown } from '@lucide/svelte';
+    import { onMount, onDestroy } from 'svelte';
     
     let { data, form } = $props();
     
+    let timerInterval: ReturnType<typeof setInterval>;
     let isMenuOpen = $state(false);
     let hatching = $state(false);
+    let dailyTimer = $state('');
+    let isDailyCooldown = $state(false);
     let hatchTier = $state<'single' | 'dual' | 'new'>('single');
 
-    // --- COOLDOWN LOGIC ---
-    const COOLDOWN_MS = 24 * 60 * 60 * 1000;
-    
-    // Reactive clock
-    let now = $state(Date.now());
-    $effect(() => {
-        const interval = setInterval(() => { now = Date.now(); }, 1000);
-        return () => clearInterval(interval);
-    });
+    const DAILY_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 
-    // Calculate time remaining
-    let lastClaimed = $derived(data.user?.lastNewHatchClaimedAt?.getTime() || 0);
-    let msRemaining = $derived(Math.max(0, (lastClaimed + COOLDOWN_MS) - now));
-    let isReady = $derived(msRemaining === 0);
-
-    // Your nice game-style time formatter
     function formatTime(remaining: number) {
         if (remaining <= 0) return '';
         const hours = Math.floor((remaining / (1000 * 60 * 60)) % 24);
@@ -36,10 +26,28 @@
         return `${hours}h ${minutes.toString().padStart(2, '0')}m ${seconds.toString().padStart(2, '0')}s`;
     }
 
-    let formattedTime = $derived.by(() => {
-        if (isReady) return "Ready!";
-        return formatTime(msRemaining);
+    function updateTimers() {
+        const now = new Date().getTime();
+
+        if (data.lastNewHatchClaimedAt) {
+            const diff = now - new Date(data.lastNewHatchClaimedAt).getTime();
+            if (diff < DAILY_COOLDOWN_MS) {
+                isDailyCooldown = true;
+                dailyTimer = formatTime(DAILY_COOLDOWN_MS - diff);
+            } else { 
+                isDailyCooldown = false;
+             }
+        }
+    }
+
+    onMount(() => {
+        updateTimers();
+        timerInterval = setInterval(updateTimers, 1000);
     });
+
+    onDestroy(() => clearInterval(timerInterval));
+
+    
 
     const rarityStyles: Record<string, string> = {
         COMMON: 'text-gray-400 border-gray-400/20 bg-gray-400/5 shadow-[0_0_20px_rgba(156,163,175,0.1)]',
@@ -197,20 +205,18 @@
     >
         <input type="hidden" name="tier" value={hatchTier} />
         
-        {#if hatchTier === 'new' && !isReady}
-        <div class="flex w-full cursor-not-allowed flex-col items-center justify-center rounded-2xl border border-white/5 bg-[#0A0A0A]/80 px-8 py-5 text-center shadow-inner">
-            <span class="text-xs font-black uppercase tracking-widest text-emerald-500/50">
-                Incubator Charging
+    {#if hatchTier === 'new' && isDailyCooldown}
+        <button 
+            disabled
+            class="flex items-center justify-center group relative w-full py-5 bg-gradient-to-r from-emerald-500 to-green-600 shadow-[0_0_20px_rgba(16,185,129,0.6)] rounded-2xl overflow-hidden transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:grayscale cursor-pointer"
+        >
+            <span class="relative z-10 flex items-center gap-3 text-white font-bold">
+                Locked: {dailyTimer}
             </span>
-            <span class="mt-2 font-mono text-3xl font-black text-gray-400">
-                {formattedTime} </span>
-            <span class="mt-2 text-[10px] text-gray-600 uppercase font-bold tracking-widest">
-                Until next guaranteed new hatch
-            </span>
-        </div>
+        </button>
     {:else}
         <button 
-            disabled={!isReady || hatching || data.userGems < (hatchTier === 'new' ? 1000 : hatchTier === 'dual' ? 200 : 100)}
+            disabled={ hatching || data.userGems < (hatchTier === 'new' ? 1000 : hatchTier === 'dual' ? 200 : 100)}
             class="flex items-center justify-center group relative w-full py-5 
             {hatchTier === 'new' ? 'bg-gradient-to-r from-emerald-500 to-green-600 shadow-[0_0_20px_rgba(16,185,129,0.6)]' 
             : hatchTier === 'dual' ? 'bg-gradient-to-r from-blue-600 to-red-600 text-white shadow-[0_0_15px_rgba(147,51,234,0.4)]' 
