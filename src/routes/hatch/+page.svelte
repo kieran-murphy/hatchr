@@ -73,7 +73,11 @@
         }
     };
 </script>
-
+<svelte:head>
+    {#if form?.creature?.imageUrl}
+        <link rel="preload" as="image" href={form.creature.imageUrl} fetchpriority="high" />
+    {/if}
+</svelte:head>
 <div class="flex flex-col items-center justify-center min-h-[80vh] gap-8 p-6 w-full max-w-[100vw] overflow-x-hidden">
     <div class="flex flex-col items-center gap-4">
         <div class="px-5 py-2 bg-white/5 border border-white/10 rounded-full flex items-center gap-3">
@@ -135,6 +139,7 @@
                     <img 
                         src={form.creature.imageUrl} 
                         alt="New Creature" 
+                        decoding="async"
                         class="relative z-10 w-56 h-56 object-cover rounded-3xl bg-black/80 border-2 border-white/10 p-2 transition-transform duration-500 hover:scale-105"
                     />
 
