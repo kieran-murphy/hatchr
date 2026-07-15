@@ -5,6 +5,7 @@ import { env } from '$env/dynamic/private';
 import { count } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { UTApi } from "uploadthing/server";
+import sharp from 'sharp';
 
 const AVAILABLE_TYPES = Object.keys(TYPE_RARITY_MAP);
 const QUEUE_TARGET = 10;
@@ -108,12 +109,17 @@ async function generateAndSaveImage(prompt: string, types: string[]): Promise<st
     const base64Data = data.candidates[0].content.parts[0].inlineData.data;
     const buffer = Buffer.from(base64Data, 'base64');
 
+    const optimizedBuffer = await sharp(buffer)
+        .resize(512, 512)
+        .webp({ quality: 80 }) 
+        .toBuffer();
+
     const typeString = types.join('__');
     
-    const customFileName = `${typeString}-${randomUUID()}.png`;
+    const customFileName = `${typeString}-${randomUUID()}.webp`;
 
-    const blob = new Blob([buffer], { type: 'image/png' });
-    const file = new File([blob], customFileName, { type: 'image/png' });
+    const blob = new Blob([optimizedBuffer], { type: 'image/webp' });
+    const file = new File([blob], customFileName, { type: 'image/webp' });
 
     const uploadResponse = await utapi.uploadFiles(file);
 
