@@ -6,6 +6,7 @@
     
     let { data } = $props();
 
+    let isFollowing = $state(data.isFollowing);
     let favorites = $derived(data.creatures?.filter(c => c.isFavorite) ?? []);
 
     let totalCount = $derived(data.creatures?.length ?? 0);
@@ -49,6 +50,10 @@
         setTimeout(() => modalType = null, 300);
         document.body.style.overflow = '';
     }
+
+    $effect(() => {
+        isFollowing = data.isFollowing;
+    });
 </script>
 
 <div class="max-w-3xl mx-auto py-16 px-6 relative">
@@ -99,15 +104,26 @@
                 <form 
                     method="POST" 
                     action="?/toggleFollow" 
-                    use:enhance
+                    use:enhance={() => {
+                        const previousState = isFollowing;
+                        isFollowing = !isFollowing;
+                        return async ({ result, update }) => {
+                            if (result.type === 'failure' || result.type === 'error') {
+                                isFollowing = previousState;
+                            }
+                            await update({ reset: false });
+                        };
+                    }}
                 >
+                    <input type="hidden" name="isFollowing" value={!isFollowing} />
                     <button 
+                        type="submit"
                         class="flex items-center gap-2 px-8 py-3 rounded-2xl font-black uppercase text-xs tracking-widest transition-all cursor-pointer
-                        {data.isFollowing 
+                        {isFollowing 
                             ? 'bg-white/5 border border-white/10 text-white hover:bg-red-500/10 hover:border-red-500/50 hover:text-red-500' 
                             : 'bg-blue-600 text-white shadow-[0_0_15px_rgba(37,99,235,0.3)] hover:scale-105 active:scale-95'}"
                     >
-                        {#if data.isFollowing}
+                        {#if isFollowing}
                             <UserMinus size={16} strokeWidth={3} />
                             Unfollow
                         {:else}
