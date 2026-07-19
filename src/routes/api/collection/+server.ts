@@ -15,6 +15,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
     const offset = Number(url.searchParams.get('offset')) || 0;
     const typeFilter = url.searchParams.get('type');
     const showDuplicates = url.searchParams.get('duplicates') === 'true';
+    const showFavorites = url.searchParams.get('favorites') === 'true';
     const sortBy = url.searchParams.get('sort') || 'recent';
 
     const conditions = [eq(creatures.userId, targetUserId)];
@@ -38,6 +39,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
             .having(sql`count(*) > 1`);
 
         conditions.push(inArray(typeCombo, duplicatesSubquery));
+    }
+
+    if (showFavorites) {
+        conditions.push(eq(creatures.isFavorite, true));
     }
 
     let orderLogic = [desc(creatures.hatchedAt)];

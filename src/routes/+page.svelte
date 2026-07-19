@@ -14,14 +14,14 @@
     const AVAILABLE_TYPES = ['All', 'Cosmic', 'Crystal', 'Dark', 'Dragon', 'Electric', 'Fire', 'Ghost', 'Grass', 'Ground', 'Ice', 'Poison', 'Psychic', 'Water'];
 
     let visibleCreatures = $state(data.creatures);
-    let isLoading = $state(false);
     let hasMore = $state(data.creatures.length === 20);
     let sortBy = $state('recent');
-    let filterType = $state('All');
+    let filterType = $state('All'); 
+    let isLoading = $state(false);
     let isTypeMenuOpen = $state(false);
     let isSortMenuOpen = $state(false);
     let showDuplicates = $state(false);
-
+    let showFavorites = $state(false);
     let isSellModalOpen = $state(false);
     let isReleasing = $state(false);
 
@@ -40,7 +40,7 @@
 
     async function reloadCollection() {
         isLoading = true;
-        const res = await fetch(`/api/collection?offset=0&type=${filterType}&duplicates=${showDuplicates}&sort=${sortBy}`);
+        const res = await fetch(`/api/collection?offset=0&type=${filterType}&duplicates=${showDuplicates}&favorites=${showFavorites}&sort=${sortBy}`);
         const result = await res.json();
         
         visibleCreatures = result.creatures || [];
@@ -59,11 +59,19 @@
         if (filterType === newType) return;
         filterType = newType;
         showDuplicates = false;
+        showFavorites = false;
         await reloadCollection();
     }
 
     async function toggleDuplicates() {
         showDuplicates = !showDuplicates;
+        showFavorites = false;
+        await reloadCollection();
+    }
+
+    async function toggleFavorites() {
+        showFavorites = !showFavorites;
+        showDuplicates = false;
         await reloadCollection();
     }
 
@@ -71,7 +79,7 @@
         if (isLoading || !hasMore) return;
         isLoading = true;
 
-        const res = await fetch(`/api/collection?offset=${visibleCreatures.length}&type=${filterType}&duplicates=${showDuplicates}&sort=${sortBy}`);
+        const res = await fetch(`/api/collection?offset=${visibleCreatures.length}&type=${filterType}&duplicates=${showDuplicates}&favorites=${showFavorites}&sort=${sortBy}`);
         const result = await res.json();
 
         if (result.creatures && result.creatures.length > 0) {
@@ -154,6 +162,15 @@
                                 Duplicates {showDuplicates ? '(On)' : ''}
                             </span>
                         </button>
+
+                        <button 
+                            onclick={() => { toggleFavorites(); isSortMenuOpen = false; }}
+                            class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-white/5 w-full text-left {showFavorites ? 'bg-white/10 text-yellow-400' : 'text-slate-400 hover:text-white'}"
+                        >
+                            <span class="text-[10px] font-black uppercase tracking-widest">
+                                Favorites {showFavorites ? '(On)' : ''}
+                            </span>
+                        </button>
                     </div>
                 {/if}
             </div>
@@ -227,6 +244,8 @@
         <div class="rounded-[2.5rem] border border-white/5 bg-[#0A0A0A]/60 backdrop-blur-xl py-32 text-center">
             {#if showDuplicates}
                 <p class="mb-6 text-gray-500 font-medium">No identical types found in your collection.</p>
+            {:else if showFavorites}
+                <p class="mb-6 text-gray-500 font-medium">No favorite creatures found in your collection.</p>
             {:else if filterType !== 'All'}
                 <p class="mb-6 text-gray-500 font-medium">No <span class={typeStyles[filterType].text}>{filterType}</span>-type creatures found in your collection.</p>
             {:else}
