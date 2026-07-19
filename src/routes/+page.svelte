@@ -11,7 +11,7 @@
 
     let { data } = $props()
 
-    const AVAILABLE_TYPES = ['All', 'Cosmic', 'Crystal', 'Dark', 'Dragon', 'Electric', 'Fire', 'Ghost', 'Grass', 'Ground', 'Ice', 'Poison', 'Psychic', 'Water'];
+    const AVAILABLE_TYPES = ['All', 'Arcane', 'Cosmic', 'Crystal', 'Dark', 'Dragon', 'Electric', 'Fire', 'Ghost', 'Grass', 'Ground', 'Ice', 'Steel', 'Poison', 'Psychic', 'Water'];
 
     let visibleCreatures = $state(data.creatures);
     let hasMore = $state(data.creatures.length === 20);

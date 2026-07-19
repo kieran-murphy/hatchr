@@ -109,7 +109,7 @@ export const actions = {
         
         const ownedCombos = new Set(userCollection.map(c => c.t2 ? [c.t1, c.t2].sort().join('-') : `${c.t1}-${c.t1}`));
 
-        const TYPES = ['Cosmic', 'Crystal', 'Dark', 'Dragon', 'Electric', 'Fire', 'Ghost', 'Grass', 'Ground', 'Ice', 'Poison', 'Psychic', 'Water', 'Mythical'];
+        const TYPES = ['Arcane', 'Cosmic', 'Crystal', 'Dark', 'Dragon', 'Electric', 'Fire', 'Ghost', 'Grass', 'Ground', 'Ice', 'Steel', 'Poison', 'Psychic', 'Water'];
         const allPossible = [];
         for (let i = 0; i < TYPES.length; i++) {
             for (let j = i; j < TYPES.length; j++) {
