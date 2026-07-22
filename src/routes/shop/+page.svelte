@@ -81,14 +81,20 @@
         showRollingNumber = true;
         displayAmount = 0;
 
+        const scrambleInterval = setInterval(() => {
+            displayAmount = Math.floor(Math.random() * 999);
+        }, 50);
+
         return async ({ result, update }) => {
+            clearInterval(scrambleInterval);
+            
             await update();
             if (result.type === 'success' && result.data?.added) {
                 const amountAdded = Number(result.data.added);
-                await animateCount(0, amountAdded, 1500);
                 
-                // Diamond Fall Effect
-                const particleCount = Math.min(200, Math.max(30, Math.floor(amountAdded / 5)));
+                await animateCount(displayAmount, amountAdded, 1500);
+                
+                const particleCount = Math.min(140, Math.max(30, Math.floor(amountAdded / 6)));
                 confettiGems = Array.from({ length: particleCount }).map((_, i) => ({
                     id: i, 
                     left: Math.random() * 100, 
@@ -108,6 +114,7 @@
             }
         };
     };
+
 </script>
 
 <div class="max-w-md mx-auto py-16 px-6">
