@@ -3,9 +3,10 @@ import { user as userTable } from '$lib/server/db/schema';
 import { eq, sql } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
 import type { Actions, PageServerLoad } from './$types';
+import { dev } from '$app/environment';
 
-const SMALL_COOLDOWN_MS = 1 * 60 * 60 * 1000;      // 1 hour
-const DAILY_COOLDOWN_MS = 24 * 60 * 60 * 1000;    // 24 hours
+const SMALL_COOLDOWN_MS = dev ? (10 * 1000) : (1 * 60 * 60 * 1000);   
+const DAILY_COOLDOWN_MS = dev ? (10 * 1000) : (24 * 60 * 60 * 1000);
 
 export const load: PageServerLoad = async ({ locals }) => {
     if (!locals.user) throw redirect(302, '/login');

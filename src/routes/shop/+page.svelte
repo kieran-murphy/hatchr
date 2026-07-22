@@ -2,6 +2,7 @@
     import { enhance } from '$app/forms';
     import { onMount, onDestroy } from 'svelte';
     import type { SubmitFunction } from '@sveltejs/kit';
+    import { dev } from '$app/environment';
 
     let { data, form } = $props();
 
@@ -9,8 +10,8 @@
     let activeTab = $state<'small' | 'daily'>('small');
 
     // -- Cooldown Logic --
-    const SMALL_COOLDOWN_MS = 1 * 60 * 60 * 1000;      // 1 hour
-    const DAILY_COOLDOWN_MS = 24 * 60 * 60 * 1000;    // 24 hours
+    const SMALL_COOLDOWN_MS = dev ? (10 * 1000) : (1 * 60 * 60 * 1000);   
+    const DAILY_COOLDOWN_MS = dev ? (10 * 1000) : (24 * 60 * 60 * 1000);
 
     let smallTimer = $state('');
     let dailyTimer = $state('');
