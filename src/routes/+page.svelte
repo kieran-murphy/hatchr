@@ -25,6 +25,8 @@
     let isSellModalOpen = $state(false);
     let isReleasing = $state(false);
 
+    let FilterIcon = $derived(typeStyles[filterType].icon);
+
     let duplicateSummary = $derived.by(() => {
         const getCombo = (c) => c.type2 ? [c.type1, c.type2].sort().join('-') : c.type1;
 
@@ -181,7 +183,7 @@
                     class="w-full md:w-auto flex items-center justify-between gap-3 bg-white/5 border border-white/5 rounded-2xl px-5 py-3 hover:bg-white/10 transition-colors cursor-pointer"
                 >
                     <div class="flex items-center gap-3">
-                        <div class="w-3 h-3 rounded-full {typeStyles[filterType].dot}"></div>
+                        <FilterIcon size={14} class={typeStyles[filterType].text} />
                         <span class="text-[10px] font-black uppercase tracking-widest {typeStyles[filterType].text}">
                             {filterType}
                         </span>
@@ -203,12 +205,13 @@
                         class="absolute left-0 mt-2 w-full md:w-48 max-h-80 overflow-y-auto bg-[#0A0A0A]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-2 z-50 flex flex-col shadow-2xl custom-scrollbar"
                     >
                         {#each AVAILABLE_TYPES as type (type)}
-                            <button 
+                            {@const ItemIcon = typeStyles[type].icon}
+                            <button
                                 onclick={() => { applyTypeFilter(type); isTypeMenuOpen = false; }}
                                 class="flex items-center justify-between px-4 py-3 rounded-xl transition-all hover:bg-white/5 w-full text-left {filterType === type ? 'bg-white/10' : ''}"
                             >
                                 <div class="flex items-center gap-3">
-                                    <div class="w-2.5 h-2.5 rounded-full {typeStyles[type].dot}"></div>
+                                    <ItemIcon size={14} class={typeStyles[type].text} />
                                     <span class="text-[10px] font-black uppercase tracking-widest {typeStyles[type].text}">
                                         {type}
                                     </span>
@@ -247,7 +250,8 @@
             {:else if showFavorites}
                 <p class="mb-6 text-gray-500 font-medium">No favorite creatures found in your collection.</p>
             {:else if filterType !== 'All'}
-                <p class="mb-6 text-gray-500 font-medium">No <span class={typeStyles[filterType].text}>{filterType}</span>-type creatures found in your collection.</p>
+                {@const EmptyIcon = typeStyles[filterType].icon}
+                <p class="mb-6 text-gray-500 font-medium">No <span class="inline-flex items-center gap-1 align-middle {typeStyles[filterType].text}"><EmptyIcon size={14} />{filterType}</span>-type creatures found in your collection.</p>
             {:else}
                 <p class="mb-6 text-gray-500 font-medium">Your collection is empty.</p>
             {/if}

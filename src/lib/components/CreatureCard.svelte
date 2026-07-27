@@ -35,20 +35,22 @@
         <div class="flex flex-col items-start gap-1.5">
             <div class="flex flex-wrap items-center gap-2">
                 {#if creature.type1 && typeStyles[creature.type1]}
+                    {@const Icon1 = typeStyles[creature.type1].icon}
                     <span class="inline-flex items-center gap-1.5 rounded border border-white/5 bg-white/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter {typeStyles[creature.type1].text}">
-                        <span class="w-1.5 h-1.5 rounded-full {typeStyles[creature.type1].dot}"></span>
+                        <Icon1 size={11} />
                         {creature.type1}
                     </span>
                 {/if}
 
                 {#if creature.type2 && typeStyles[creature.type2]}
+                    {@const Icon2 = typeStyles[creature.type2].icon}
                     <span class="inline-flex items-center gap-1.5 rounded border border-white/5 bg-white/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter {typeStyles[creature.type2].text}">
-                        <span class="w-1.5 h-1.5 rounded-full {typeStyles[creature.type2].dot}"></span>
+                        <Icon2 size={11} />
                         {creature.type2}
                     </span>
                 {/if}
             </div>
-            
+
             <span class="inline-block rounded border px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter {rarityColors[creature.rarity]}">
                 {creature.rarity}
             </span>

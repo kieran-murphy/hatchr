@@ -126,8 +126,9 @@
     <div class="min-h-[300px] grid place-items-center relative">
         
         {#if form?.success && !hatching}
-            <div 
-                in:scale={{ duration: 800, start: 0.5, easing: elasticOut }} 
+            {@const Icon1 = typeStyles[form.creature.type1]?.icon || typeStyles['All'].icon}
+            <div
+                in:scale={{ duration: 800, start: 0.5, easing: elasticOut }}
                 out:fade={{ duration: 200 }} 
                 class="col-start-1 row-start-1 flex flex-col items-center gap-6 relative"
             >
@@ -165,13 +166,14 @@
                     
                     <div class="flex justify-center gap-2">
                         <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md {typeStyles[form.creature.type1]?.text || 'text-gray-300'}">
-                            <div class="w-1.5 h-1.5 rounded-full {typeStyles[form.creature.type1]?.dot || 'bg-gray-400'}"></div>
+                            <Icon1 size={12} />
                             {form.creature.type1}
                         </span>
-                        
+
                         {#if form.creature.type2}
+                            {@const Icon2 = typeStyles[form.creature.type2]?.icon || typeStyles['All'].icon}
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md {typeStyles[form.creature.type2]?.text || 'text-gray-300'}">
-                                <div class="w-1.5 h-1.5 rounded-full {typeStyles[form.creature.type2]?.dot || 'bg-gray-400'}"></div>
+                                <Icon2 size={12} />
                                 {form.creature.type2}
                             </span>
                         {/if}

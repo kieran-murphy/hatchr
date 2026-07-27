@@ -122,18 +122,20 @@
                             <p class="text-[10px] text-slate-500 font-black uppercase">Creature Type</p>
                             <div class="flex items-center gap-3 mt-1 flex-wrap">
                                 {#if creature.type1}
+                                    {@const Icon1 = typeStyles[creature.type1]?.icon || typeStyles['All'].icon}
                                     <div class="flex items-center gap-2">
-                                        <div class="w-2 h-2 rounded-full {typeStyles[creature.type1]?.dot || typeStyles['All'].dot}"></div>
+                                        <Icon1 size={16} class={typeStyles[creature.type1]?.text || typeStyles['All'].text} />
                                         <span class="font-black uppercase italic tracking-wider text-sm {typeStyles[creature.type1]?.text || typeStyles['All'].text}">
                                             {creature.type1}
                                         </span>
                                     </div>
                                 {/if}
-                                
+
                                 {#if creature.type2}
+                                    {@const Icon2 = typeStyles[creature.type2]?.icon || typeStyles['All'].icon}
                                     <span class="text-slate-600 font-black">/</span>
                                     <div class="flex items-center gap-2">
-                                        <div class="w-2 h-2 rounded-full {typeStyles[creature.type2]?.dot || typeStyles['All'].dot}"></div>
+                                        <Icon2 size={16} class={typeStyles[creature.type2]?.text || typeStyles['All'].text} />
                                         <span class="font-black uppercase italic tracking-wider text-sm {typeStyles[creature.type2]?.text || typeStyles['All'].text}">
                                             {creature.type2}
                                         </span>

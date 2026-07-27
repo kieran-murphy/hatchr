@@ -167,13 +167,13 @@
             onclick={() => activeTab = 'small'}
             class="flex-1 py-3 text-sm font-black uppercase tracking-widest rounded-xl transition-all {activeTab === 'small' ? 'bg-white text-black' : 'text-slate-400 hover:text-white'}"
         >
-            Gem Chest
+            Gem Box
         </button>
         <button
             onclick={() => activeTab = 'daily'}
             class="flex-1 py-3 text-sm font-black uppercase tracking-widest rounded-xl transition-all {activeTab === 'daily' ? 'bg-yellow-500/20 text-yellow-500' : 'text-slate-400 hover:text-white'}"
         >
-            Daily Fortune
+            Gem Bank
         </button>
     </div>
 
@@ -184,7 +184,7 @@
                 <div class="text-7xl" class:chest-shake={chestState === 'shaking'} class:chest-pop={chestState === 'burst'}>🎁</div>
             </div>
             <div class="text-center">
-                <h3 class="text-xl font-bold text-white">Gem Chest</h3>
+                <h3 class="text-xl font-bold text-white">Gem Box</h3>
                 <p class="text-blue-400 font-black text-2xl mt-1">
                     {#if showRollingNumber}<span class:number-pop={pulseNumber}>{displayAmount} 💎</span>{:else}Every 1 Hour{/if}
                 </p>
@@ -204,17 +204,17 @@
                     class:animate-bounce={chestState === 'idle'}
                     class:chest-shake={chestState === 'shaking'}
                     class:chest-pop={chestState === 'burst'}
-                >✨</div>
+                >🏛️</div>
             </div>
             <div class="text-center">
-                <h3 class="text-xl font-bold text-yellow-100">Daily Fortune</h3>
+                <h3 class="text-xl font-bold text-yellow-100">Gem Bank</h3>
                 <p class="text-yellow-400 font-black text-2xl mt-1">
                     {#if showRollingNumber}<span class:number-pop={pulseNumber}>{displayAmount} 💎</span>{:else}Every 24 Hours{/if}
                 </p>
             </div>
             <form method="POST" action="?/claimDaily" use:enhance={handleClaim} class="w-full">
                 <button disabled={isOpening || isDailyCooldown} class="w-full py-4 bg-yellow-500 text-black font-bold rounded-xl hover:bg-yellow-400 disabled:opacity-50 transition-colors">
-                    {isDailyCooldown ? `Locked: ${dailyTimer}` : (isOpening ? 'Opening...' : 'Claim Daily Fortune')}
+                    {isDailyCooldown ? `Locked: ${dailyTimer}` : (isOpening ? 'Opening...' : 'Claim from Gem Bank')}
                 </button>
             </form>
         </div>
