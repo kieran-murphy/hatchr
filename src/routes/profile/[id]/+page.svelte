@@ -34,8 +34,8 @@
 
     const rarityBorders = {
         COMMON: 'border-white/5',
-        RARE: 'border-blue-500/30',
-        EPIC: 'border-purple-500/30',
+        UNCOMMON: 'border-blue-500/30',
+        RARE: 'border-purple-500/30',
         LEGENDARY: 'border-yellow-500/50 shadow-[0_0_20px_rgba(250,204,21,0.15)]'
     };
 

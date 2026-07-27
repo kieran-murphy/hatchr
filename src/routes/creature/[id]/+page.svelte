@@ -21,15 +21,15 @@
 
     const rarityColors = {
         COMMON: 'text-gray-400',
-        RARE: 'text-blue-400',
-        EPIC: 'text-purple-400',
+        UNCOMMON: 'text-blue-400',
+        RARE: 'text-purple-400',
         LEGENDARY: 'text-yellow-400 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]'
     };
 
     const rarityBgColors = {
         COMMON: 'bg-gray-400/10',
-        RARE: 'bg-blue-400/10',
-        EPIC: 'bg-purple-400/10',
+        UNCOMMON: 'bg-blue-400/10',
+        RARE: 'bg-purple-400/10',
         LEGENDARY: 'bg-yellow-400/10'
     };
 
