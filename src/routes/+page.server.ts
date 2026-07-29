@@ -61,7 +61,8 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         where: eq(creatures.userId, locals.user.id),
         columns: {
             type1: true,
-            type2: true
+            type2: true,
+            isFavorite: true
         }
     });
 
@@ -77,9 +78,39 @@ export const load: PageServerLoad = async ({ url, locals }) => {
         if (c.type2 && typeCounts[c.type2] !== undefined) typeCounts[c.type2]++;
     });
 
+    // Mirrors the bulkRelease action's dedup logic so the "Sell All Duplicates"
+    // estimate matches what will actually be released and rewarded. A favorite
+    // covers the "keeper" slot for its combo, so every non-favorite in that
+    // combo is sellable; otherwise one non-favorite is kept as the keeper.
+    const comboGroups = new Map<string, { nonFavoriteCount: number, hasFavorite: boolean, hasType2: boolean }>();
+    allUserCreatures.forEach(c => {
+        const types = c.type2 ? [c.type1, c.type2] : [c.type1];
+        const comboKey = types.sort().join('-');
+        const existing = comboGroups.get(comboKey);
+        if (existing) {
+            if (c.isFavorite) existing.hasFavorite = true;
+            else existing.nonFavoriteCount++;
+        } else {
+            comboGroups.set(comboKey, {
+                nonFavoriteCount: c.isFavorite ? 0 : 1,
+                hasFavorite: c.isFavorite ?? false,
+                hasType2: !!c.type2
+            });
+        }
+    });
+
+    let duplicateCount = 0;
+    let duplicateGems = 0;
+    comboGroups.forEach(({ nonFavoriteCount, hasFavorite, hasType2 }) => {
+        const sellable = hasFavorite ? nonFavoriteCount : Math.max(nonFavoriteCount - 1, 0);
+        duplicateCount += sellable;
+        duplicateGems += sellable * (hasType2 ? 100 : 50);
+    });
+
     return {
         creatures: userCreatures,
-        typeCounts: typeCounts
+        typeCounts: typeCounts,
+        duplicateSummary: { count: duplicateCount, gems: duplicateGems }
     };
 };
 
@@ -87,28 +118,37 @@ export const actions: Actions = {
     bulkRelease: async ({ locals }) => {
         if (!locals.user) throw redirect(302, '/login');
 
-        const allSafeCreatures = await db.query.creatures.findMany({
-            where: and(
-                eq(creatures.userId, locals.user.id),
-                eq(creatures.isFavorite, false) 
-            ),
-            orderBy: [asc(creatures.hatchedAt)] 
+        const allCreatures = await db.query.creatures.findMany({
+            where: eq(creatures.userId, locals.user.id),
+            orderBy: [asc(creatures.hatchedAt)]
         });
 
+        // A favorite covers the "keeper" slot for its combo, so every
+        // non-favorite in that combo is sellable; otherwise the earliest
+        // non-favorite is kept and the rest are sellable.
         const seenCombos = new Set<string>();
+        const favoriteCombos = new Set<string>();
+        allCreatures.forEach(c => {
+            if (!c.isFavorite) return;
+            const types = c.type2 ? [c.type1, c.type2] : [c.type1];
+            favoriteCombos.add(types.sort().join('-'));
+        });
+
         const idsToDelete: string[] = [];
         let totalGemsReward = 0;
 
-        for (const creature of allSafeCreatures) {
+        for (const creature of allCreatures) {
+            if (creature.isFavorite) continue;
+
             const types = [creature.type1];
             if (creature.type2) types.push(creature.type2);
             const comboKey = types.sort().join('-');
 
-            if (!seenCombos.has(comboKey)) {
+            if (!favoriteCombos.has(comboKey) && !seenCombos.has(comboKey)) {
                 seenCombos.add(comboKey);
             } else {
                 idsToDelete.push(creature.id);
-                totalGemsReward += creature.type2 ? 100 : 50; 
+                totalGemsReward += creature.type2 ? 100 : 50;
             }
         }
 

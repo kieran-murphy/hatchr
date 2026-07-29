@@ -27,18 +27,7 @@
 
     let FilterIcon = $derived(typeStyles[filterType].icon);
 
-    let duplicateSummary = $derived.by(() => {
-        const getCombo = (c) => c.type2 ? [c.type1, c.type2].sort().join('-') : c.type1;
-
-        const duplicates = visibleCreatures.filter((c, index, self) => 
-            self.findIndex(t => getCombo(t) === getCombo(c)) !== index
-        );
-        
-        const count = duplicates.length;
-        const gems = duplicates.reduce((acc, c) => acc + (c.type2 ? 100 : 50), 0);
-        
-        return { count, gems };
-    });
+    let duplicateSummary = $derived(data.duplicateSummary);
 
     async function reloadCollection() {
         isLoading = true;
