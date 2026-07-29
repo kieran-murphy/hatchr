@@ -2,7 +2,7 @@
     import { flip } from 'svelte/animate';
     import { quintOut } from 'svelte/easing';
     import { scale, fade } from 'svelte/transition';
-    import { ListFilter } from '@lucide/svelte';
+    import { ListFilter, Clock, Star, ArrowDownAZ, Copy } from '@lucide/svelte';
     import { resolve } from '$app/paths';
     import { enhance } from '$app/forms';
     import { typeStyles } from '$lib/game.js';
@@ -12,6 +12,12 @@
     let { data } = $props()
 
     const AVAILABLE_TYPES = ['All', 'Arcane', 'Cosmic', 'Crystal', 'Dark', 'Dragon', 'Electric', 'Fire', 'Ghost', 'Grass', 'Ground', 'Ice', 'Steel', 'Poison', 'Psychic', 'Water'];
+
+    const sortIcons = {
+        recent: Clock,
+        rarity: Star,
+        alphabetical: ArrowDownAZ
+    };
 
     let visibleCreatures = $state(data.creatures);
     let hasMore = $state(data.creatures.length === 20);
@@ -132,10 +138,12 @@
                     >
                         <div class="px-4 py-2 text-[8px] font-black text-slate-500 uppercase tracking-widest">Sort By</div>
                         {#each ['recent', 'rarity', 'alphabetical'] as option (option)}
-                            <button 
+                            {@const SortIcon = sortIcons[option]}
+                            <button
                                 onclick={() => applySort(option)}
                                 class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-white/5 w-full text-left {sortBy === option ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white'}"
                             >
+                                <SortIcon size={14} />
                                 <span class="text-[10px] font-black uppercase tracking-widest">
                                     {option}
                                 </span>
@@ -145,19 +153,21 @@
                         <div class="w-full h-px bg-white/10 my-2 shrink-0"></div>
                         <div class="px-4 py-2 text-[8px] font-black text-slate-500 uppercase tracking-widest">Filters</div>
                         
-                        <button 
+                        <button
                             onclick={() => { toggleDuplicates(); isSortMenuOpen = false; }}
                             class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-white/5 w-full text-left {showDuplicates ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white'}"
                         >
+                            <Copy size={14} />
                             <span class="text-[10px] font-black uppercase tracking-widest">
                                 Duplicates {showDuplicates ? '(On)' : ''}
                             </span>
                         </button>
 
-                        <button 
+                        <button
                             onclick={() => { toggleFavorites(); isSortMenuOpen = false; }}
                             class="flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:bg-white/5 w-full text-left {showFavorites ? 'bg-white/10 text-yellow-400' : 'text-slate-400 hover:text-white'}"
                         >
+                            <Star size={14} class={showFavorites ? 'fill-yellow-400' : ''} />
                             <span class="text-[10px] font-black uppercase tracking-widest">
                                 Favorites {showFavorites ? '(On)' : ''}
                             </span>
