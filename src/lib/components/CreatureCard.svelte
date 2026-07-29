@@ -1,63 +1,90 @@
 <script lang="ts">
     import { resolve } from '$app/paths';
-    import { typeStyles } from '$lib/game.js';
+    import { typeStyles, type Rarity } from '$lib/game.js';
     import { Star } from '@lucide/svelte';
 
-    let { creature } = $props();
+    let {
+        creature
+    }: {
+        creature: {
+            id: string;
+            speciesName: string;
+            imageUrl: string;
+            rarity: Rarity;
+            type1: string;
+            type2: string | null;
+            isFavorite: boolean | null;
+        };
+    } = $props();
 
-    const rarityColors = {
-        COMMON: 'text-gray-400 bg-gray-400/10 border-gray-400/20',
-        UNCOMMON: 'text-blue-400 bg-blue-400/10 border-blue-400/20',
-        RARE: 'text-purple-400 bg-purple-400/10 border-purple-400/20',
-        LEGENDARY: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20 shadow-[0_0_15px_rgba(250,204,21,0.2)]'
+    const rarityStyles: Record<Rarity, { dot: string; text: string; glow?: string }> = {
+        COMMON: { dot: 'bg-gray-400', text: 'text-gray-400' },
+        UNCOMMON: { dot: 'bg-blue-400', text: 'text-blue-400' },
+        RARE: { dot: 'bg-purple-400', text: 'text-purple-400' },
+        LEGENDARY: {
+            dot: 'bg-yellow-400',
+            text: 'text-yellow-400',
+            glow: 'shadow-[0_0_15px_rgba(250,204,21,0.2)]'
+        }
     };
 </script>
 
 <a
     href={resolve(`/creature/${creature.id}`)}
-    class="group relative rounded-2xl border border-white/5 bg-[#0A0A0A]/60 backdrop-blur-md p-4 transition-all hover:-translate-y-2 hover:border-white/20 hover:bg-[#0D0D0D] block"
+    class="group relative block rounded-2xl border border-white/5 bg-[#0A0A0A]/60 p-4 backdrop-blur-md transition-all hover:-translate-y-2 hover:border-white/20 hover:bg-[#0D0D0D] {rarityStyles[
+        creature.rarity
+    ]?.glow ?? ''}"
 >
-    <div class="relative mb-4 flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-white/5 bg-black/40">
-        <img
-            src={creature.imageUrl}
-            alt={creature.speciesName}
-            class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-        />
-        
-        {#if creature.isFavorite}
-            <div class="absolute top-2 right-2 bg-black/50 backdrop-blur-md p-1.5 rounded-full border border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.6)]">
-                <Star size={20} class="fill-yellow-400 text-yellow-400" />
-            </div>
-        {/if}
+    <div class="relative">
+        <div class="flex aspect-square items-center justify-center overflow-hidden rounded-xl border border-white/5 bg-black/40">
+            <img
+                src={creature.imageUrl}
+                alt={creature.speciesName}
+                class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+            />
+
+            {#if creature.isFavorite}
+                <div class="absolute top-2 right-2 bg-black/50 backdrop-blur-md p-1.5 rounded-full border border-white/10 shadow-[0_0_10px_rgba(255,255,255,0.6)]">
+                    <Star size={20} class="fill-yellow-400 text-yellow-400" />
+                </div>
+            {/if}
+        </div>
+
+        <div class="absolute -bottom-3 left-2 flex items-center gap-1.5">
+            {#if creature.type1 && typeStyles[creature.type1]}
+                {@const Icon1 = typeStyles[creature.type1].icon}
+                <span
+                    class="flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-black/70 backdrop-blur {typeStyles[creature.type1].text}"
+                    title={creature.type1}
+                    aria-label="{creature.type1} type"
+                >
+                    <Icon1 size={13} />
+                </span>
+            {/if}
+
+            {#if creature.type2 && typeStyles[creature.type2]}
+                {@const Icon2 = typeStyles[creature.type2].icon}
+                <span
+                    class="flex h-7 w-7 items-center justify-center rounded-full border border-white/10 bg-black/70 backdrop-blur {typeStyles[creature.type2].text}"
+                    title={creature.type2}
+                    aria-label="{creature.type2} type"
+                >
+                    <Icon2 size={13} />
+                </span>
+            {/if}
+        </div>
     </div>
 
-    <div class="space-y-2">
-        <div class="flex flex-col items-start gap-1.5">
-            <div class="flex flex-wrap items-center gap-2">
-                {#if creature.type1 && typeStyles[creature.type1]}
-                    {@const Icon1 = typeStyles[creature.type1].icon}
-                    <span class="inline-flex items-center gap-1.5 rounded border border-white/5 bg-white/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter {typeStyles[creature.type1].text}">
-                        <Icon1 size={11} />
-                        {creature.type1}
-                    </span>
-                {/if}
+    <div class="mt-5 px-0.5">
+        <h3 class="truncate text-lg font-black italic tracking-tighter text-white uppercase transition-colors group-hover:text-blue-400">
+            {creature.speciesName}
+        </h3>
 
-                {#if creature.type2 && typeStyles[creature.type2]}
-                    {@const Icon2 = typeStyles[creature.type2].icon}
-                    <span class="inline-flex items-center gap-1.5 rounded border border-white/5 bg-white/5 px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter {typeStyles[creature.type2].text}">
-                        <Icon2 size={11} />
-                        {creature.type2}
-                    </span>
-                {/if}
-            </div>
-
-            <span class="inline-block rounded border px-2 py-0.5 text-[9px] font-black uppercase tracking-tighter {rarityColors[creature.rarity]}">
+        <div class="mt-1.5 flex items-center gap-1.5">
+            <span class="h-1.5 w-1.5 rounded-full {rarityStyles[creature.rarity].dot}"></span>
+            <span class="text-[9px] font-black uppercase tracking-wider {rarityStyles[creature.rarity].text}">
                 {creature.rarity}
             </span>
         </div>
-        
-        <h3 class="text-lg leading-tight font-black italic tracking-tighter text-white uppercase group-hover:text-blue-400 transition-colors">
-            {creature.speciesName}
-        </h3>
     </div>
 </a>
