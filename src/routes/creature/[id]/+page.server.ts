@@ -13,7 +13,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
 
     if (!creature) throw error(404, 'Creature not found');
 
-    return { creature };
+    return { creature, isOwner: locals.user.id === creature.userId };
 };
 
 export const actions: Actions = {

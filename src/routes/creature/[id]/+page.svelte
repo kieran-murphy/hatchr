@@ -8,7 +8,7 @@
     let { data, form } = $props();
     let creature = $derived(data.creature);
     
-    let isOwner = $derived(data.isOwner ?? (data.user?.id === creature?.userId));
+    let isOwner = $derived(data.isOwner);
     let releaseReward = $derived(creature?.type2 ? 100 : 50);
 
     let isFavorite = $state(data.creature?.isFavorite ?? false);
