@@ -33,6 +33,13 @@
         LEGENDARY: 'bg-yellow-400/10'
     };
 
+    const rarityGlowColors = {
+        COMMON: 'bg-gray-300/30 group-hover:bg-gray-300/40',
+        UNCOMMON: 'bg-blue-500/30 group-hover:bg-blue-500/40',
+        RARE: 'bg-purple-500/30 group-hover:bg-purple-500/40',
+        LEGENDARY: 'bg-yellow-400/30 group-hover:bg-yellow-400/40'
+    };
+
 </script>
 
 {#if creature}
@@ -44,7 +51,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div in:fly={{ x: -20, duration: 600 }} class="relative group">
-                <div class="absolute inset-0 bg-blue-600/20 blur-[100px] rounded-full -z-10 group-hover:bg-blue-600/30 transition-colors"></div>
+                <div class="absolute inset-0 {rarityGlowColors[creature.rarity]} blur-[100px] rounded-full -z-10 transition-colors"></div>
                 
                 <img 
                     src={creature.imageUrl} 
