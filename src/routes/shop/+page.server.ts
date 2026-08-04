@@ -12,9 +12,10 @@ export const load: PageServerLoad = async ({ locals }) => {
     if (!locals.user) throw redirect(302, '/login');
     
     const [freshUser] = await db
-        .select({ 
+        .select({
             lastChestClaimedAt: userTable.lastChestClaimedAt,
-            lastDailyRewardClaimedAt: userTable.lastDailyRewardClaimedAt 
+            lastDailyRewardClaimedAt: userTable.lastDailyRewardClaimedAt,
+            gems: userTable.gems
         })
         .from(userTable)
         .where(eq(userTable.id, locals.user.id))
@@ -22,7 +23,8 @@ export const load: PageServerLoad = async ({ locals }) => {
 
     return {
         lastChestClaimedAt: freshUser?.lastChestClaimedAt || null,
-        lastDailyRewardClaimedAt: freshUser?.lastDailyRewardClaimedAt || null
+        lastDailyRewardClaimedAt: freshUser?.lastDailyRewardClaimedAt || null,
+        userGems: freshUser?.gems ?? 0
     };
 };
 

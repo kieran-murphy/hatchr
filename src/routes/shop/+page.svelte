@@ -3,11 +3,18 @@
     import { onMount, onDestroy } from 'svelte';
     import type { SubmitFunction } from '@sveltejs/kit';
     import { dev } from '$app/environment';
+    import { Gift, Landmark, Gem } from '@lucide/svelte';
 
     let { data, form } = $props();
 
     // -- Tab State --
     let activeTab = $state<'small' | 'daily'>('small');
+
+    // -- Reward Ranges (mirrors the server-side formulas in +page.server.ts) --
+    const SMALL_MIN = 200;
+    const SMALL_MAX = 600;
+    const DAILY_MIN = 300;
+    const DAILY_MAX = 2100;
 
     // -- Cooldown Logic --
     const SMALL_COOLDOWN_MS = dev ? (10 * 1000) : (1 * 60 * 60 * 1000);
@@ -17,6 +24,9 @@
     let dailyTimer = $state('');
     let isSmallCooldown = $state(false);
     let isDailyCooldown = $state(false);
+    let smallProgress = $state(100);
+    let dailyProgress = $state(100);
+    let pulseBalance = $state(false);
     let timerInterval: ReturnType<typeof setInterval>;
 
     function formatTime(remaining: number) {
@@ -31,21 +41,25 @@
         const now = new Date().getTime();
 
         // Small Chest Timer
-        if (data.lastChestClaimedAt) {
-            const diff = now - new Date(data.lastChestClaimedAt).getTime();
-            if (diff < SMALL_COOLDOWN_MS) {
-                isSmallCooldown = true;
-                smallTimer = formatTime(SMALL_COOLDOWN_MS - diff);
-            } else { isSmallCooldown = false; }
+        const smallDiff = data.lastChestClaimedAt ? now - new Date(data.lastChestClaimedAt).getTime() : SMALL_COOLDOWN_MS;
+        if (smallDiff < SMALL_COOLDOWN_MS) {
+            isSmallCooldown = true;
+            smallTimer = formatTime(SMALL_COOLDOWN_MS - smallDiff);
+            smallProgress = Math.max(0, Math.min(100, (smallDiff / SMALL_COOLDOWN_MS) * 100));
+        } else {
+            isSmallCooldown = false;
+            smallProgress = 100;
         }
 
         // Daily Fortune Timer
-        if (data.lastDailyRewardClaimedAt) {
-            const diff = now - new Date(data.lastDailyRewardClaimedAt).getTime();
-            if (diff < DAILY_COOLDOWN_MS) {
-                isDailyCooldown = true;
-                dailyTimer = formatTime(DAILY_COOLDOWN_MS - diff);
-            } else { isDailyCooldown = false; }
+        const dailyDiff = data.lastDailyRewardClaimedAt ? now - new Date(data.lastDailyRewardClaimedAt).getTime() : DAILY_COOLDOWN_MS;
+        if (dailyDiff < DAILY_COOLDOWN_MS) {
+            isDailyCooldown = true;
+            dailyTimer = formatTime(DAILY_COOLDOWN_MS - dailyDiff);
+            dailyProgress = Math.max(0, Math.min(100, (dailyDiff / DAILY_COOLDOWN_MS) * 100));
+        } else {
+            isDailyCooldown = false;
+            dailyProgress = 100;
         }
     }
 
@@ -129,6 +143,9 @@
                 setTimeout(() => (showFlash = false), 500);
                 spawnParticles(amountAdded);
 
+                pulseBalance = true;
+                setTimeout(() => (pulseBalance = false), 500);
+
                 showRollingNumber = true;
                 const scrambleInterval = setInterval(() => {
                     displayAmount = Math.floor(Math.random() * amountAdded);
@@ -158,60 +175,90 @@
 </script>
 
 <div class="max-w-md mx-auto py-16 px-6">
-    <header class="text-center mb-12">
+    <header class="text-center mb-8">
         <h1 class="text-5xl font-black text-white italic tracking-tighter uppercase">Gem Shop</h1>
     </header>
+
+    <div class="flex justify-center mb-8">
+        <div class="px-5 py-2 bg-white/5 border border-white/10 rounded-full flex items-center gap-3">
+            <span class="text-[10px] font-black text-blue-400 uppercase tracking-widest">Balance</span>
+            <span class="text-xl font-mono font-bold text-blue-400 inline-flex items-center gap-1.5" class:balance-pulse={pulseBalance}>
+                {(data.userGems ?? 0).toLocaleString()} 💎
+            </span>
+        </div>
+    </div>
 
     <div class="flex p-1 bg-white/5 border border-white/10 rounded-2xl mb-8">
         <button
             onclick={() => activeTab = 'small'}
-            class="flex-1 py-3 text-sm font-black uppercase tracking-widest rounded-xl transition-all {activeTab === 'small' ? 'bg-white text-black' : 'text-slate-400 hover:text-white'}"
+            class="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all {activeTab === 'small' ? 'bg-blue-600 text-white shadow-[0_0_20px_-4px_rgba(59,130,246,0.6)]' : 'text-slate-400 hover:text-white'}"
         >
-            Gem Box
+            <Gift size={13} strokeWidth={2.5} /> Gem Box
         </button>
         <button
             onclick={() => activeTab = 'daily'}
-            class="flex-1 py-3 text-sm font-black uppercase tracking-widest rounded-xl transition-all {activeTab === 'daily' ? 'bg-yellow-500/20 text-yellow-500' : 'text-slate-400 hover:text-white'}"
+            class="flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-black uppercase tracking-widest rounded-xl transition-all {activeTab === 'daily' ? 'bg-gradient-to-br from-yellow-400 to-amber-600 text-black shadow-[0_0_20px_-4px_rgba(250,204,21,0.5)]' : 'text-slate-400 hover:text-white'}"
         >
-            Gem Bank
+            <Landmark size={13} strokeWidth={2.5} /> Gem Bank
         </button>
     </div>
 
     {#if activeTab === 'small'}
-        <div class="bg-gray-900 border border-white/10 rounded-3xl p-8 flex flex-col items-center gap-6" class:opacity-80={isSmallCooldown}>
+        <div class="bg-gray-900 border border-white/10 rounded-3xl p-8 flex flex-col items-center gap-4 text-center" class:opacity-80={isSmallCooldown}>
             <div class="chest-anchor text-blue-400">
+                <div class="icon-glow bg-blue-500"></div>
                 {#if chestState === 'burst'}<div class="shockwave"></div>{/if}
-                <div class="text-7xl" class:chest-shake={chestState === 'shaking'} class:chest-pop={chestState === 'burst'}>🎁</div>
+                <div class="relative" class:chest-shake={chestState === 'shaking'} class:chest-pop={chestState === 'burst'}>
+                    <Gift size={44} strokeWidth={1.5} />
+                </div>
             </div>
-            <div class="text-center">
-                <h3 class="text-xl font-bold text-white">Gem Box</h3>
-                <p class="text-blue-400 font-black text-2xl mt-1">
-                    {#if showRollingNumber}<span class:number-pop={pulseNumber}>{displayAmount} 💎</span>{:else}Every 1 Hour{/if}
-                </p>
+            <div>
+                <h3 class="text-xl font-black italic uppercase tracking-tight text-white">Gem Box</h3>
+                <p class="text-[11px] font-bold uppercase tracking-wide text-slate-400 mt-1">{SMALL_MIN}–{SMALL_MAX} gems · every hour</p>
             </div>
+
+            <div class="h-8 flex items-center justify-center">
+                {#if showRollingNumber}
+                    <span class="text-2xl font-black text-blue-400" class:number-pop={pulseNumber}>+{displayAmount} 💎</span>
+                {/if}
+            </div>
+
+            <div class="w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
+                <div class="h-full rounded-full bg-blue-500 transition-all duration-1000 ease-linear" style="width: {smallProgress}%"></div>
+            </div>
+            <span class="text-[10px] font-bold uppercase tracking-wide text-slate-500">{isSmallCooldown ? smallTimer : 'Ready now'}</span>
+
             <form method="POST" action="?/claimSmall" use:enhance={handleClaim} class="w-full">
-                <button disabled={isOpening || isSmallCooldown} class="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-blue-500 hover:text-white disabled:opacity-50 transition-colors">
+                <button disabled={isOpening || isSmallCooldown} class="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-blue-500 hover:text-white disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-black transition-colors">
                     {isSmallCooldown ? `Locked: ${smallTimer}` : (isOpening ? 'Opening...' : 'Claim Free')}
                 </button>
             </form>
         </div>
     {:else}
-        <div class="bg-gradient-to-b from-yellow-900/20 to-black border border-yellow-500/30 rounded-3xl p-8 flex flex-col items-center gap-6" class:opacity-80={isDailyCooldown}>
+        <div class="bg-gradient-to-b from-yellow-900/20 to-black border border-yellow-500/30 rounded-3xl p-8 flex flex-col items-center gap-4 text-center" class:opacity-80={isDailyCooldown}>
             <div class="chest-anchor text-yellow-400">
+                <div class="icon-glow bg-yellow-400"></div>
                 {#if chestState === 'burst'}<div class="shockwave"></div>{/if}
-                <div
-                    class="text-7xl"
-                    class:animate-bounce={chestState === 'idle'}
-                    class:chest-shake={chestState === 'shaking'}
-                    class:chest-pop={chestState === 'burst'}
-                >🏛️</div>
+                <div class="relative" class:chest-shake={chestState === 'shaking'} class:chest-pop={chestState === 'burst'}>
+                    <Landmark size={44} strokeWidth={1.5} />
+                </div>
             </div>
-            <div class="text-center">
-                <h3 class="text-xl font-bold text-yellow-100">Gem Bank</h3>
-                <p class="text-yellow-400 font-black text-2xl mt-1">
-                    {#if showRollingNumber}<span class:number-pop={pulseNumber}>{displayAmount} 💎</span>{:else}Every 24 Hours{/if}
-                </p>
+            <div>
+                <h3 class="text-xl font-black italic uppercase tracking-tight text-yellow-100">Gem Bank</h3>
+                <p class="text-[11px] font-bold uppercase tracking-wide text-yellow-500/70 mt-1">{DAILY_MIN}–{DAILY_MAX.toLocaleString()} gems · every 24h</p>
             </div>
+
+            <div class="h-8 flex items-center justify-center">
+                {#if showRollingNumber}
+                    <span class="text-2xl font-black text-yellow-400" class:number-pop={pulseNumber}>+{displayAmount} 💎</span>
+                {/if}
+            </div>
+
+            <div class="w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
+                <div class="h-full rounded-full bg-gradient-to-r from-amber-600 to-yellow-400 transition-all duration-1000 ease-linear" style="width: {dailyProgress}%"></div>
+            </div>
+            <span class="text-[10px] font-bold uppercase tracking-wide text-yellow-600/70">{isDailyCooldown ? dailyTimer : 'Ready now'}</span>
+
             <form method="POST" action="?/claimDaily" use:enhance={handleClaim} class="w-full">
                 <button disabled={isOpening || isDailyCooldown} class="w-full py-4 bg-yellow-500 text-black font-bold rounded-xl hover:bg-yellow-400 disabled:opacity-50 transition-colors">
                     {isDailyCooldown ? `Locked: ${dailyTimer}` : (isOpening ? 'Opening...' : 'Claim from Gem Bank')}
@@ -271,6 +318,28 @@
         display: flex;
         align-items: center;
         justify-content: center;
+    }
+
+    .icon-glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 72px;
+        height: 72px;
+        border-radius: 9999px;
+        filter: blur(20px);
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
+    .balance-pulse {
+        animation: balance-pulse 0.4s ease-out;
+    }
+    @keyframes balance-pulse {
+        0% { transform: scale(1); }
+        45% { transform: scale(1.15); }
+        100% { transform: scale(1); }
     }
 
     .shockwave {
