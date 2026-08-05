@@ -1,5 +1,6 @@
 <script lang="ts">
     import { resolve } from '$app/paths';
+    import { TOTAL_TYPE_COMBOS } from '$lib/game';
 
     let { data } = $props();
 
@@ -78,16 +79,16 @@
                             href={resolve(`/profile/${user.id}`)} 
                             class="flex items-center justify-between p-3 sm:p-4 rounded-2xl transition-all hover:-translate-y-1 group {getRankStyles(index)}"
                         >
-                            <div class="flex items-center gap-3 sm:gap-6 overflow-hidden">
+                            <div class="flex items-center gap-3 sm:gap-6 overflow-hidden min-w-0 flex-1">
                                 <div class="w-6 sm:w-8 text-center font-black text-xl sm:text-2xl italic {getRankText(index).split(' ')[0]} shrink-0">
                                     #{index + 1}
                                 </div>
 
-                                <div class="flex items-center gap-3 sm:gap-4 overflow-hidden">
+                                <div class="flex items-center gap-3 sm:gap-4 overflow-hidden min-w-0">
                                     {#if user.image}
-                                        <img 
-                                            src={user.image} 
-                                            alt="{user.username}'s avatar" 
+                                        <img
+                                            src={user.image}
+                                            alt="{user.username}'s avatar"
                                             referrerpolicy="no-referrer"
                                             class="w-10 h-10 sm:w-12 sm:h-12 rounded-full object-cover border-2 {getRankText(index).split(' ')[1]} transition-colors shrink-0"
                                         />
@@ -97,7 +98,7 @@
                                         </div>
                                     {/if}
 
-                                    <span class="text-white font-black uppercase tracking-wider text-sm sm:text-lg group-hover:text-blue-400 transition-colors truncate max-w-[100px] sm:max-w-none">
+                                    <span class="text-white font-black uppercase tracking-wider text-xs sm:text-lg group-hover:text-blue-400 transition-colors truncate min-w-0">
                                         {user.username}
                                     </span>
                                 </div>
@@ -116,7 +117,7 @@
                             {:else}
                                 <div class="text-emerald-400 font-black tracking-widest bg-emerald-500/10 border border-emerald-500/20 px-2 py-1.5 sm:px-4 sm:py-2 rounded-xl flex items-center gap-1 sm:gap-2 shrink-0">
                                     <span class="text-sm sm:text-base">{user.uniqueCount || 0}</span>
-                                    <span class="text-emerald-600/50 text-xs sm:text-sm hidden min-[380px]:inline">/ 105</span> 
+                                    <span class="text-emerald-600/50 text-xs sm:text-sm hidden min-[380px]:inline">/ {TOTAL_TYPE_COMBOS}</span>
                                     <span class="text-base sm:text-lg grayscale group-hover:grayscale-0 transition-all">✨</span>
                                 </div>
                             {/if}

@@ -8,6 +8,7 @@ import {
     Crown,
     Zap,
     Flame,
+    Triangle,
     Ghost,
     Leaf,
     Mountain,
@@ -15,7 +16,8 @@ import {
     Anvil,
     Bubbles,
     Eye,
-    Droplet
+    Droplet,
+    Circle
 } from '@lucide/svelte';
 
 export type Rarity = 'COMMON' | 'UNCOMMON' | 'RARE' | 'LEGENDARY';
@@ -28,8 +30,8 @@ export const rarityWeight: Record<Rarity, number> = {
 };
 
 export const CREATURE_POOL: Record<Rarity, string[]> = {
-    COMMON: ['Water', 'Grass', 'Fire', 'Poison', 'Ground'], 
-    UNCOMMON: ['Electric', 'Ice', 'Dark', 'Steel'],
+    COMMON: ['Water', 'Grass', 'Fire', 'Poison', 'Ground', 'Slime'],
+    UNCOMMON: ['Electric', 'Ice', 'Dark', 'Steel', 'Lava'],
     RARE: ['Ghost', 'Psychic', 'Arcane'],
     LEGENDARY: ['Cosmic', 'Dragon', 'Crystal']
 };
@@ -47,9 +49,11 @@ export const typeStyles: Record<string, { text: string, dot: string, icon: Compo
     'Grass': { text: 'text-green-400', dot: 'bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.6)]', icon: Leaf },
     'Ground': { text: 'text-amber-500', dot: 'bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.6)]', icon: Mountain },
     'Ice': { text: 'text-sky-300', dot: 'bg-sky-300 shadow-[0_0_10px_rgba(125,211,252,0.6)]', icon: Snowflake },
+    'Lava': { text: 'text-orange-600', dot: 'bg-orange-600 shadow-[0_0_10px_rgba(234,88,12,0.6)]', icon: Triangle },
     'Steel': { text: 'text-zinc-300', dot: 'bg-zinc-300 shadow-[0_0_10px_rgba(212,212,216,0.6)]', icon: Anvil },
     'Poison': { text: 'text-emerald-400', dot: 'bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.6)]', icon: Bubbles },
     'Psychic': { text: 'text-pink-400', dot: 'bg-pink-400 shadow-[0_0_10px_rgba(244,114,182,0.6)]', icon: Eye },
+    'Slime': { text: 'text-lime-400', dot: 'bg-lime-400 shadow-[0_0_10px_rgba(163,230,53,0.6)]', icon: Circle },
     'Water': { text: 'text-blue-500', dot: 'bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.6)]', icon: Droplet }
 };
 
@@ -60,6 +64,12 @@ for (const [rarity, types] of Object.entries(CREATURE_POOL)) {
         TYPE_RARITY_MAP[type] = rarity as Rarity;
     }
 }
+
+// Every type can appear solo (type2 null) or paired with any other distinct type
+// (dual-type generation always picks two different types), so the number of
+// distinct type combos a collection can contain is types + C(types, 2).
+const TYPE_COUNT = Object.keys(TYPE_RARITY_MAP).length;
+export const TOTAL_TYPE_COMBOS = (TYPE_COUNT * (TYPE_COUNT + 1)) / 2;
 
 export function getRandomType(rarity: Rarity): string {
     const speciesList = CREATURE_POOL[rarity];

@@ -11,7 +11,7 @@
 
     let { data } = $props()
 
-    const AVAILABLE_TYPES = ['All', 'Arcane', 'Cosmic', 'Crystal', 'Dark', 'Dragon', 'Electric', 'Fire', 'Ghost', 'Grass', 'Ground', 'Ice', 'Steel', 'Poison', 'Psychic', 'Water'];
+    const AVAILABLE_TYPES = ['All', 'Arcane', 'Cosmic', 'Crystal', 'Dark', 'Dragon', 'Electric', 'Fire', 'Ghost', 'Grass', 'Ground', 'Ice', 'Lava', 'Slime', 'Steel', 'Poison', 'Psychic', 'Water'];
 
     const sortIcons = {
         recent: Clock,

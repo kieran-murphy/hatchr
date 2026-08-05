@@ -67,7 +67,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
     });
 
     const typeCounts: Record<string, number> = { 'All': allUserCreatures.length };
-    const AVAILABLE_TYPES = ['Arcane', 'Cosmic', 'Crystal', 'Dark', 'Dragon', 'Electric', 'Fire', 'Ghost', 'Grass', 'Ground', 'Ice', 'Steel', 'Poison', 'Psychic', 'Water'];
+    const AVAILABLE_TYPES = ['Arcane', 'Cosmic', 'Crystal', 'Dark', 'Dragon', 'Electric', 'Fire', 'Ghost', 'Grass', 'Ground', 'Ice', 'Lava', 'Slime', 'Steel', 'Poison', 'Psychic', 'Water'];
 
     AVAILABLE_TYPES.forEach(t => {
         typeCounts[t] = 0;
